@@ -2,9 +2,9 @@ from skimage.io import imread, imshow
 from skimage.color import rgb2ycbcr
 import math
 import numpy as np
-from numpy import split as split_array
 
 from dct import dct
+from zig_zag import zig_zag_order
 
 
 def transform_to_ycc(img):
@@ -37,6 +37,9 @@ def handle_parts(channel_img):
     freq_y = dct(y)
     freq_cb = dct(cb)
     freq_cr = dct(cr)
+    zig_zag_order(freq_y)
+    zig_zag_order(freq_cb)
+    zig_zag_order(freq_cr)
     return
 
 
@@ -50,6 +53,7 @@ def split_on_parts(img):
     for num_ch_x in range(0, channel_number_x):
         for num_ch_y in range(0, channel_number_y):
             part_img = []
+
             for i in range(0, N):
                 part_img.append([])
                 for j in range(0, M):
