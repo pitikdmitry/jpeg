@@ -34,8 +34,8 @@ def dct(fx):
             z = 0 # для резулятата
             for n in range(0, N):
                 for m in range(0, M):
-                    cos_m_k = cos(((2 * m + 1) * k * pi) / 2 * M)
-                    cos_n_l = cos(((2 * n + 1) * l * pi) / 2 * N)
+                    cos_m_k = cos(((2 * m + 1) * k * pi) / (2 * M))
+                    cos_n_l = cos(((2 * n + 1) * l * pi) / (2 * N))
                     x_m_n = fx[n][m]   # действительная часть значения яркости пикселя
                     z += x_m_n * cos_m_k * cos_n_l
 
@@ -44,8 +44,23 @@ def dct(fx):
                 c_k = 1 / sqrt(2)
             if l == 0:
                 c_l = 1 / sqrt(2)
-            z = z * c_k * c_l
+            z = (z * 2 * c_k * c_l) / sqrt(N * M)
 
             result[k][l] = z
 
     return result
+
+
+if __name__ == "__main__":
+    input_arr = np.asarray([[52,55,61,66,70,61,64,73],
+                 [63,59,55,90,109,85,69,72],
+                 [62,59,68,113,144,104,66,73],
+                 [63,58,71,122,154,106,70,69],
+                 [67,61,68,104,126,88,68,70],
+                 [79,65,60,70,77,68,58,75],
+                 [85,71,64,59,55,61,65,83],
+                 [87,79,69,68,65,76,78,94]])
+    input_arr -= 128
+    freq = dct(input_arr)
+    pass
+
