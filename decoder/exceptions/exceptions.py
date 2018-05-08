@@ -1,0 +1,2 @@
+class BadMarkerException(BaseException):
+    pass

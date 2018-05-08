@@ -1,10 +1,10 @@
-from skimage.io import imread, imshow
+from skimage.io import imread
 from skimage.color import rgb2ycbcr
 import math
 import numpy as np
 
-from dct import dct
-from zig_zag import zig_zag_order
+from coder.dct import dct
+from coder.zig_zag import zig_zag_order
 
 
 def transform_to_ycc(img):
