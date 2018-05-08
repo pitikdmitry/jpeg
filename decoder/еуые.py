@@ -1,1 +1,1 @@
-print(hex(255))
+print(int("0x43"))
