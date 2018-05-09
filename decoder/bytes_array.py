@@ -43,3 +43,15 @@ class BytesArray(list):
         if len(result_arr) > 0:
             return result_arr
         return -1
+
+    def read_n_bytes(self, start_index: int, n: int) -> []:
+        result_arr = []
+
+        for i in range(start_index, start_index + n):
+            if i < len(self):
+                result_arr.append(self[i])
+            else:
+                break
+        if len(result_arr) > 0:
+            return result_arr
+        return -1
