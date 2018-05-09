@@ -51,8 +51,12 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo):
         haff_length = int(ffc4_header[1], 16)
         haff_arr = bytes_array.read_n_bytes(haff_table_start + header_length, haff_length - header_length)
         haff_tree = HaffmanTree(haff_arr)
-        val1 = haff_tree.get_value("01")
-        val2 = haff_tree.get_value("10")
+        val0 = haff_tree.get_value("100")
+        val1 = haff_tree.get_value("101")
+        val2 = haff_tree.get_value("1100")
+        val3 = haff_tree.get_value("1101")
+        val4 = haff_tree.get_value("1110")
+        val5 = haff_tree.get_value("11110")
         start_index = haff_table_start + haff_length
 
 

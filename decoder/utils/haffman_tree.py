@@ -46,14 +46,17 @@ class HaffmanTree:
 
     def _add_node(self, current_level, current_node: Node, new_node: Node):
         #   1=ok 2=bad, need to go to another branch
+
         if current_node.left is None:
             current_level += 1
             if current_level == new_node.level:
                 current_node.left = new_node
                 return 1
-            else:
+            elif current_level < new_node.level:
                 current_node.left = Node(current_level)
                 return self._add_node(current_level, current_node.left, new_node)
+            else:
+                return -2
         elif current_node is not None and current_node.left.value == -1:
             # try to go left
             current_level += 1
@@ -62,6 +65,8 @@ class HaffmanTree:
                 return 1
             elif result == -2:
                 # try to go right
+                if current_node.right is None:
+                    current_node.right = Node(current_level)
                 result = self._add_node(current_level, current_node.right, new_node)
                 return result
         elif current_node.right is None:
@@ -69,13 +74,17 @@ class HaffmanTree:
             if current_level == new_node.level:
                 current_node.right = new_node
                 return 1
-            else:
+            elif current_level < new_node.level:
+                if current_node.right is None:
+                    current_node.right = Node(current_level)
                 current_node.right = Node(current_level)
                 return self._add_node(current_level, current_node.right, new_node)
+            else:
+                return -1
         elif current_node is not None and current_node.right.value == -1:
             # try to go left
             current_level += 1
-            result = self._add_node(current_level, current_node.left, new_node)
+            result = self._add_node(current_level, current_node.right, new_node)
             if result == 1:
                 return 1
             elif result == -2:
@@ -94,7 +103,7 @@ class HaffmanTree:
             amount_of_nodes_on_cur_level = int(self._arr[i], 16)
 
             for i in range(0 , amount_of_nodes_on_cur_level):
-                value = int(self._arr[current_index_for_val], 16)
+                value = int(self._arr[current_index_for_val])
                 node = Node(current_level, value)
                 self._arr_of_nodes.append(node)
                 current_index_for_val += 1
