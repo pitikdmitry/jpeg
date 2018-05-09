@@ -6,12 +6,12 @@ from decoder.utils.zig_zag import zig_zag_order
 
 
 def parse_ffd8(bytes_array: BytesArray, image_info: ImageInfo):    #  заголовок
-    if bytes_array[0] + bytes_array[1] != b'ffd8':
+    if bytes_array[0] + bytes_array[1] != 'ffd8':
         raise BadMarkerException
 
 
 def parse_fffe(bytes_array: BytesArray, image_info: ImageInfo):    #   комментарий
-    if bytes_array[2] + bytes_array[3] != b'fffe':
+    if bytes_array[2] + bytes_array[3] != 'fffe':
         raise BadMarkerException
     #   find ff db to cut comment
     ff_db_index = bytes_array.find_pair("ff", "db")
@@ -42,7 +42,7 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
     pass
 
 
-def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo):
+def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
     start_index = 0
     while True:
         haff_table_start = bytes_array.find_pair("ff", "c4", start=start_index)
@@ -51,17 +51,52 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo):
         haff_table_start += 2
         header_length = 3
         ffc4_header = bytes_array.read_n_bytes(haff_table_start, header_length)
-        haff_length = int(ffc4_header[1], 16)
+        haff_length = int(ffc4_header[0] + ffc4_header[1], 16)  # changed
+        ac_dc_id = ffc4_header[2]
         haff_arr = bytes_array.read_n_bytes(haff_table_start + header_length, haff_length - header_length)
-        haff_tree = HaffmanTree(haff_arr)
+        haff_tree = HaffmanTree(haff_arr, ac_dc_id)
         # val0 = haff_tree.get_value("100")
         # val1 = haff_tree.get_value("101")
         # val2 = haff_tree.get_value("1100")
         # val3 = haff_tree.get_value("1101")
         # val4 = haff_tree.get_value("1110")
         # val5 = haff_tree.get_value("11110")
+
+        image_info.haffman_trees.append(haff_tree)
         start_index = haff_table_start + haff_length
 
+
+def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
+    ffda_data = bytes_array.read_from_one_pair_to_other("ffda", "ffd9")
+    header_length = int(ffda_data[2] + ffda_data[3], 16)   #   в первых ьдвух байтах длина только для заголовочной части а не для всей секции
+    ffc4_header = ffda_data[4: header_length]
+    amount_of_components = int(ffc4_header[0], 16)
+    coded_data = ffda_data[(header_length + 2):]
+
+    #   в цикле для количества компонентов считываем по 2 байта(информацию о них)
+    if amount_of_components == 3:
+        y_info = ffda_data[5:7]
+        parse_y_channel(coded_data, y_info, image_info=image_info)
+        cb_info = ffda_data[7:9]
+        cr_info = ffda_data[9:11]
+    elif amount_of_components == 1:
+        y_info = ffda_data[5:7]
+        parse_y_channel(coded_data, y_info, image_info=image_info)
+
+
+def parse_y_channel(code: str, y_info: str, image_info: ImageInfo):
+    haffman_trees = image_info.haffman_trees
+    dc_haff_tree = None
+    ac_haff_tree = None
+
+    y_dc_table_num = int(y_info[1][0])
+    y_ac_table_num = int(y_info[1][1])
+    for tree in haffman_trees:
+        if int(tree.ac_dc_id) == y_dc_table_num:
+            dc_haff_tree = tree
+        if int(tree.ac_dc_id) == y_ac_table_num:
+            ac_haff_tree = tree
+    pass
 
 with open("favicon.jpg", "rb") as f:
     img = f.read()
@@ -73,5 +108,6 @@ with open("favicon.jpg", "rb") as f:
         parse_ffdb(bytes_array, image_info)
         parse_ffc0(bytes_array, image_info)
         parse_ffc4(bytes_array, image_info)
+        parse_ffda(bytes_array, image_info)
     except BadMarkerException as e:
         print("Bad marker exc")

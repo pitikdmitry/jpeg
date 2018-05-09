@@ -1,16 +1,21 @@
 class ImageInfo:
     def __init__(self):
-        self.comment_str = ""
-        self.quantization_tables = []
+        self._comment = ""
+        self._quantization_tables = []
+        self._haffman_trees = []
 
     @property
     def comment(self) -> str:
-        return self.comment
+        return self._comment
 
     @comment.setter
     def comment(self, comm: str):
-        self.comment_str = comm
+        self._comment = comm
 
-    # @property
-    # def quantization_tables(self) -> []:
-    #     return self.quantization_tables
+    @property
+    def quantization_tables(self) -> []:
+        return self._quantization_tables
+
+    @property
+    def haffman_trees(self) -> []:
+        return self._haffman_trees

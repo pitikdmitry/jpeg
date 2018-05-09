@@ -34,8 +34,9 @@ class Node:
 
 
 class HaffmanTree:
-    def __init__(self, haff_arr_bytes: []):
+    def __init__(self, haff_arr_bytes: [], ac_dc_id: str):
         self._arr = haff_arr_bytes
+        self._ac_dc_id = ac_dc_id
         self._arr_of_nodes = []
         self._root = Node(0)
         self._build_tree()
@@ -43,6 +44,10 @@ class HaffmanTree:
     @property
     def root(self):
         return self._root
+
+    @property
+    def ac_dc_id(self):
+        return self._ac_dc_id
 
     def _add_node(self, current_level, current_node: Node, new_node: Node):
         #   1=ok 2=bad, need to go to another branch

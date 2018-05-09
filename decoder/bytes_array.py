@@ -9,15 +9,16 @@ class BytesArray(list):
         n = 2
         for i in range(0, len(img_hex), n):
             byte_hex = img_hex[i:i + n]
-            super(BytesArray, self).append(byte_hex)
+            string_hex = byte_hex.decode("utf-8")
+            super(BytesArray, self).append(string_hex)
 
     def find_pair(self, str1: str, str2: str, start: int = 0, end: int = -1) -> int:
         if start >= len(self):
             return -1
         if end == -1:
             end = len(self)
-        str1 = bytes(str1, encoding="UTF-8")
-        str2 = bytes(str2, encoding="UTF-8")
+        # str1 = bytes(str1, encoding="UTF-8")
+        # str2 = bytes(str2, encoding="UTF-8")
 
         for i in range(start, end):
             if i + 1 < len(self):
@@ -31,8 +32,8 @@ class BytesArray(list):
         return -1
 
     def find_all_pairs(self, str1: str, str2: str) -> []:
-        str1 = bytes(str1, encoding="UTF-8")
-        str2 = bytes(str2, encoding="UTF-8")
+        # str1 = bytes(str1, encoding="UTF-8")
+        # str2 = bytes(str2, encoding="UTF-8")
         result_arr = []
 
         for i in range(0, len(self)):
@@ -45,6 +46,31 @@ class BytesArray(list):
         if len(result_arr) > 0:
             return result_arr
         return -1
+
+    def read_from_one_pair_to_other(self, pair1: str, pair2: str, start=0, end=-1):
+        if start >= len(self):
+            return -1
+        if end == -1:
+            end = len(self)
+
+        start_index = -1
+        end_index = -1
+        start_found = False
+        # pair1 = bytes(pair1, encoding="UTF-8")
+        # pair2 = bytes(pair2, encoding="UTF-8")
+
+        for i in range(start, end):
+            if i + 1 < len(self):
+                first_str = self[i]
+                second_str = self[i + 1]
+                if first_str + second_str == pair1:
+                    start_index = i
+                    start_found = True
+                if first_str + second_str == pair2 and start_found:
+                    end_index = i
+
+        if start_index != -1 and end_index != -1:
+            return self[start_index:end_index]
 
     def read_n_bytes(self, start_index: int, n: int) -> []:
         result_arr = []
