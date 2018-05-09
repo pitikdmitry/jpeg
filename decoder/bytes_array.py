@@ -12,6 +12,8 @@ class BytesArray(list):
             super(BytesArray, self).append(byte_hex)
 
     def find_pair(self, str1: str, str2: str, start: int = 0, end: int = -1) -> int:
+        if start >= len(self):
+            return -1
         if end == -1:
             end = len(self)
         str1 = bytes(str1, encoding="UTF-8")
