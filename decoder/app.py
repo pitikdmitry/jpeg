@@ -72,16 +72,23 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ffc4_header = ffda_data[4: header_length]
     amount_of_components = int(ffc4_header[0], 16)
     coded_data = ffda_data[(header_length + 2):]
+    coded_data_binary = ""
+    for ch in coded_data:
+        ch_str = str(ch)
+        ch_10 = int(ch_str, 16)
+        ch_2 = bin(ch_10)
+        ch_2 = ch_2[2:]
+        coded_data_binary += str(ch_2)
 
     #   в цикле для количества компонентов считываем по 2 байта(информацию о них)
     if amount_of_components == 3:
         y_info = ffda_data[5:7]
-        parse_y_channel(coded_data, y_info, image_info=image_info)
+        parse_y_channel(coded_data_binary, y_info, image_info=image_info)
         cb_info = ffda_data[7:9]
         cr_info = ffda_data[9:11]
     elif amount_of_components == 1:
         y_info = ffda_data[5:7]
-        parse_y_channel(coded_data, y_info, image_info=image_info)
+        parse_y_channel(coded_data_binary, y_info, image_info=image_info)
 
 
 def parse_y_channel(code: str, y_info: str, image_info: ImageInfo):
@@ -96,7 +103,15 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo):
             dc_haff_tree = tree
         if int(tree.ac_dc_id) == y_ac_table_num:
             ac_haff_tree = tree
+
+    arr_for_index = [0]
+    dc = dc_haff_tree.get_next_value(code, arr_for_index)
+    dc_koef = 0
+    if dc.value != 0:
+        dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, dc.value)
+
     pass
+
 
 with open("favicon.jpg", "rb") as f:
     img = f.read()

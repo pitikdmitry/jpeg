@@ -121,7 +121,7 @@ class HaffmanTree:
             node = self._arr_of_nodes[i]
             self._add_node(0, self.root, node)
 
-    def get_value(self, code: str):
+    def get_value_by_code(self, code: str):
         current_node = self.root
         for c in code:
             if c == "0" and current_node.left is not None:
@@ -133,3 +133,34 @@ class HaffmanTree:
             elif c == "1" and current_node.right is None:
                 return current_node
         return current_node
+
+    def get_next_value(self, code: str, arr_for_index: []):
+        index = arr_for_index[0]
+        current_node = self.root
+        while index < len(code):
+            c = code[index]
+            if c == "0" and current_node.left is not None:
+                current_node = current_node.left
+            elif c == "0" and current_node.left is None:
+                return current_node
+            if c == "1" and current_node.right is not None:
+                current_node = current_node.right
+            elif c == "1" and current_node.right is None:
+                return current_node
+            index += 1
+
+        arr_for_index[0] = index
+        return current_node
+
+    def get_next_n_bits(self, code: str, arr_for_index: [], n: int):
+        index = arr_for_index[0]
+        counter = 0
+        current_code = ""
+        while counter < n:
+            c = code[index]
+            current_code += c
+            index += 1
+            counter += 1
+
+        arr_for_index[0] = index
+        return current_code
