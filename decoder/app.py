@@ -1,6 +1,7 @@
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException
 from decoder.image_info import ImageInfo
+from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.zig_zag import zig_zag_order
 
 
@@ -48,8 +49,8 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo):
         header_length = 3
         ffc4_header = bytes_array.read_n_bytes(haff_table_start, header_length)
         haff_length = int(ffc4_header[1], 16)
-        haff_table = bytes_array.read_n_bytes(haff_table_start + header_length, haff_length - header_length)
-
+        haff_arr = bytes_array.read_n_bytes(haff_table_start + header_length, haff_length - header_length)
+        haff_tree = HaffmanTree(haff_arr)
         start_index = haff_table_start + haff_length
 
 
