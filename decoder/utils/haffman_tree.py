@@ -37,8 +37,8 @@ class HaffmanTree:
     def __init__(self, haff_arr_bytes: []):
         self._arr = haff_arr_bytes
         self._arr_of_nodes = []
-        self._build_tree()
         self._root = Node(0)
+        self._build_tree()
 
     @property
     def root(self):
@@ -85,8 +85,6 @@ class HaffmanTree:
         else:
             return -2
 
-
-
     def _parse_nodes(self):
         amount_of_nodes = 16
         current_level = 1
@@ -108,3 +106,16 @@ class HaffmanTree:
         for i in range(0, len(self._arr_of_nodes)):
             node = self._arr_of_nodes[i]
             self._add_node(0, self.root, node)
+
+    def get_value(self, code: str):
+        current_node = self.root
+        for c in code:
+            if c == "0" and current_node.left is not None:
+                current_node = current_node.left
+            elif c == "0" and current_node.left is None:
+                return current_node
+            if c == "1" and current_node.right is not None:
+                current_node = current_node.right
+            elif c == "1" and current_node.right is None:
+                return current_node
+        return current_node
