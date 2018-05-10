@@ -1,4 +1,6 @@
 import numpy as np
+from skimage.io import imread
+from skimage.color import ycbcr2rgb
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
@@ -182,9 +184,36 @@ def quantization(image_info: ImageInfo):
 
 
 def i_dct(image_info: ImageInfo):
-    res = idct(image_info.y_channels[0])
-    pass
+    for i in range(0, len(image_info.y_channels)):
+        image_info.y_channels[i] = idct(image_info.y_channels[i])
+    for i in range(0, len(image_info.cb_channels)):
+        image_info.cb_channels[i] = idct(image_info.cb_channels[i])
+    for i in range(0, len(image_info.cr_channels)):
+        image_info.cr_channels[i] = idct(image_info.cr_channels[i])
 
+
+def convert_ycbcr_to_rgb(y, cb, cr):
+    res = create_zeros_list(len(y), len(y[0]))
+    for i in range(0, len(y)):
+        for j in range(0, len(y[0])):
+            R = y[i][j] + 1.402 * cr[i / 2][j / 2] + 128
+            if R > 255:
+                R = 255
+            G = y[i][j] - 0.34414 * cb[i / 2][j / 2] - 0.71414 * cr[i / 2][j / 2] + 128
+            if G > 255:
+                G = 255
+            B = y[i][j] + 1.772 * cb[i / 2][j / 2] + 128
+            if B > 255:
+                B = 255
+
+            res[i][j] = [R, G, B]
+    return res
+
+
+def y_cb_cr_to_rgb(image_info: ImageInfo):
+    for i in range(0, len(image_info.y_channels)):
+        rgb = convert_ycbcr_to_rgb(image_info.y_channels[i], image_info.cb_channels[i], image_info.cr_channels[i])
+        pass
 
 
 with open("favicon.jpg", "rb") as f:
@@ -200,6 +229,7 @@ with open("favicon.jpg", "rb") as f:
         parse_ffda(bytes_array, image_info)
         quantization(image_info)
         i_dct(image_info)
+        y_cb_cr_to_rgb(image_info)
     except BadMarkerException as e:
         print("Bad marker exc")
 # даюовить проверку что заполнили всю матрицу
