@@ -53,7 +53,7 @@ class ZigZag:
     def put_in_zig_zag(self, result, element):
         N, M = 8, 8
 
-        if self._i == 0 and self._j == 0:
+        if self._counter == 0:
             result[self._i][self._j] = element
             self._counter += 1
             return

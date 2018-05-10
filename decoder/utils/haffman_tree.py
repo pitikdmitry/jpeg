@@ -2,7 +2,7 @@ from decoder.exceptions.exceptions import HaffmanException
 
 
 class Node:
-    def __init__(self, level: int, value: int = -1):
+    def __init__(self, level: int, value: str = "0"):
         self._value = value
         self._level = level
         self._left = None
@@ -62,7 +62,7 @@ class HaffmanTree:
                 return self._add_node(current_level, current_node.left, new_node)
             else:
                 return -2
-        elif current_node is not None and current_node.left.value == -1:
+        elif current_node is not None and current_node.left.value == "0":
             # try to go left
             current_level += 1
             result = self._add_node(current_level, current_node.left, new_node)
@@ -85,8 +85,8 @@ class HaffmanTree:
                 current_node.right = Node(current_level)
                 return self._add_node(current_level, current_node.right, new_node)
             else:
-                return -1
-        elif current_node is not None and current_node.right.value == -1:
+                return -2
+        elif current_node is not None and current_node.right.value == "0":
             # try to go left
             current_level += 1
             result = self._add_node(current_level, current_node.right, new_node)
@@ -108,7 +108,7 @@ class HaffmanTree:
             amount_of_nodes_on_cur_level = int(self._arr[i], 16)
 
             for i in range(0 , amount_of_nodes_on_cur_level):
-                value = int(self._arr[current_index_for_val])
+                value = self._arr[current_index_for_val]
                 node = Node(current_level, value)
                 self._arr_of_nodes.append(node)
                 current_index_for_val += 1
@@ -142,10 +142,12 @@ class HaffmanTree:
             if c == "0" and current_node.left is not None:
                 current_node = current_node.left
             elif c == "0" and current_node.left is None:
+                arr_for_index[0] = index
                 return current_node
             if c == "1" and current_node.right is not None:
                 current_node = current_node.right
             elif c == "1" and current_node.right is None:
+                arr_for_index[0] = index
                 return current_node
             index += 1
 

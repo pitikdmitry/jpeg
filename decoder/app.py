@@ -103,24 +103,43 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
     y_dc_table_num = int(y_info[1][0])
     y_ac_table_num = int(y_info[1][1])
     for tree in haffman_trees:
-        if int(tree.ac_dc_id) == y_dc_table_num:
-            dc_haff_tree = tree
-        if int(tree.ac_dc_id) == y_ac_table_num:
-            ac_haff_tree = tree
+        if int(tree.ac_dc_id[1]) == y_dc_table_num:
+            if int(tree.ac_dc_id[0]) == 0:
+                dc_haff_tree = tree
+
+        if int(tree.ac_dc_id[1]) == y_ac_table_num:
+            if int(tree.ac_dc_id[0]) == 1:
+                ac_haff_tree = tree
 
     arr_for_index = [0]
     #   reading dc
     dc = dc_haff_tree.get_next_value(code, arr_for_index)
     dc_koef = 0
     if dc.value != 0:
-        dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, dc.value)
+        dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, int(dc.value))
         if dc_koef[0] != "1":
             dc_koef = int(dc_koef, 2) - 2 ** dc.value + 1
         dc_koef = int(dc_koef, 2)
     zig_zag.put_in_zig_zag(result_array, dc_koef)
     #   reading ac
-    pass
+    ac = ac_haff_tree.get_next_value(code, arr_for_index)
+    while ac.value != "0":
+        amount_zeros = int(ac.value[0])
+        for i in range(0, amount_zeros):
+            zig_zag.put_in_zig_zag(result_array, 0)
 
+        length_of_koef = int(ac.value[1])
+        ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
+        if ac_koef[0] != "1":
+            a = int(ac_koef, 2)
+            c = int(ac.value[1])
+            b = 2 ** int(ac.value[1])
+            ac_koef = int(ac_koef, 2) - 2 ** int(ac.value[1]) + 1
+        else:
+            ac_koef = int(ac_koef, 2)
+        zig_zag.put_in_zig_zag(result_array, ac_koef)
+        ac = ac_haff_tree.get_next_value(code, arr_for_index)
+    pass
 
 with open("favicon.jpg", "rb") as f:
     img = f.read()
