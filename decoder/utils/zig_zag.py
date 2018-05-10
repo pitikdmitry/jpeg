@@ -58,42 +58,42 @@ class ZigZag:
             self._counter += 1
             return
 
-        while self._counter < N * M - 1:
+        if self._counter < N * M - 1:
             if not self._up:  #   down
-                while 0 <= self._i < N - 1 and 0 < self._j < M:
+                if 0 <= self._i < N - 1 and 0 < self._j < M:
                     self._j -= 1
                     self._i += 1
                     result[self._i][self._j] = element
                     self._counter += 1
                     return
+                else:
+                    self._up = True
+
                 if 0 < self._i < N - 1:
                     self._i += 1
                     result[self._i][self._j] = element
                     self._counter += 1
-                    return
-                elif 0 <= self._j< M - 1:
+                elif 0 <= self._j < M - 1:
                     self._j += 1
-                    result[i][j] = element
+                    result[self._i][self._j] = element
                     self._counter += 1
-                    return
-                self._up = True
             else:   #   up
-                while 0 < self._i < N and 0 <= self._j < M - 1:
+                if 0 < self._i < N and 0 <= self._j < M - 1:
                     self._j += 1
                     self._i -= 1
                     result[self._i][self._j] = element
                     self._counter += 1
                     return
-                if 0 <= self._j< M - 1:
+                else:
+                    self._up = False
+
+                if 0 <= self._j < M - 1:
                     self._j += 1
                     result[self._i][self._j] = element
                     self._counter += 1
-                    return
                 elif 0 <= self._i < N - 1:
                     self._i += 1
                     result[self._i][self._j] = element
                     self._counter += 1
-                    return
-                self._up = False
 
         return

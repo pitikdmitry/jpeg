@@ -141,6 +141,7 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
         ac = ac_haff_tree.get_next_value(code, arr_for_index)
     pass
 
+
 with open("favicon.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
