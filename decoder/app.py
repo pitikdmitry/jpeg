@@ -1,5 +1,5 @@
 from decoder.bytes_array import BytesArray
-from decoder.exceptions.exceptions import BadMarkerException
+from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
 from decoder.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list
 from decoder.utils.haffman_tree import HaffmanTree
@@ -74,27 +74,29 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ffc4_header = ffda_data[4: header_length]
     amount_of_components = int(ffc4_header[0], 16)
     coded_data = ffda_data[(header_length + 2):]
-    coded_data_binary = ""
+    coded_data_str = ""
     for ch in coded_data:
-        ch_str = str(ch)
-        ch_10 = int(ch_str, 16)
-        ch_2 = bin(ch_10)
-        ch_2 = ch_2[2:]
-        coded_data_binary += str(ch_2)
+        coded_data_str += ch
+    ch_10 = int(coded_data_str, 16)
+    ch_2 = bin(ch_10)
+    coded_data_binary = ch_2[2:]
 
     #   в цикле для количества компонентов считываем по 2 байта(информацию о них)
-    zig_zag = ZigZag()
+    arr_for_index = [0]
     if amount_of_components == 3:
         y_info = ffda_data[5:7]
-        parse_y_channel(coded_data_binary, y_info, image_info, zig_zag)
+        for i in range(0, 4):
+            zig_zag = ZigZag()
+            parse_y_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
         cb_info = ffda_data[7:9]
         cr_info = ffda_data[9:11]
     elif amount_of_components == 1:
         y_info = ffda_data[5:7]
+        zig_zag = ZigZag()
         parse_y_channel(coded_data_binary, y_info, image_info, zig_zag)
 
 
-def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag):
+def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
     result_array = create_zeros_list(8, 8)
     haffman_trees = image_info.haffman_trees
     dc_haff_tree = None
@@ -111,24 +113,33 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
             if int(tree.ac_dc_id[0]) == 1:
                 ac_haff_tree = tree
 
-    arr_for_index = [0]
     #   reading dc
     dc = dc_haff_tree.get_next_value(code, arr_for_index)
     dc_koef = 0
-    if dc.value != 0:
+    if dc.value == "root" or dc.value == "node":
+        raise BadDecodeException
+    if dc.value != "0":
         dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, int(dc.value))
         if dc_koef[0] != "1":
-            dc_koef = int(dc_koef, 2) - 2 ** dc.value + 1
-        dc_koef = int(dc_koef, 2)
+            dc_koef = int(dc_koef, 2) - 2 ** int(dc.value) + 1
+        else:
+            dc_koef = int(dc_koef, 2)
     zig_zag.put_in_zig_zag(result_array, dc_koef)
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
-    while ac.value != "0":
+    while True:
+        if ac.value == "root" or ac.value == "node":
+            image_info.y_channels.append(result_array)
+            return
+
         amount_zeros = int(ac.value[0])
         for i in range(0, amount_zeros):
             zig_zag.put_in_zig_zag(result_array, 0)
 
         length_of_koef = int(ac.value[1])
+        if length_of_koef == 0:
+            ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            continue    # may be need to add 0
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             a = int(ac_koef, 2)
@@ -139,7 +150,6 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
             ac_koef = int(ac_koef, 2)
         zig_zag.put_in_zig_zag(result_array, ac_koef)
         ac = ac_haff_tree.get_next_value(code, arr_for_index)
-    pass
 
 
 with open("favicon.jpg", "rb") as f:

@@ -3,6 +3,7 @@ class ImageInfo:
         self._comment = ""
         self._quantization_tables = []
         self._haffman_trees = []
+        self._y_channels = []
 
     @property
     def comment(self) -> str:
@@ -19,3 +20,7 @@ class ImageInfo:
     @property
     def haffman_trees(self) -> []:
         return self._haffman_trees
+
+    @property
+    def y_channels(self) -> []:
+        return self._y_channels

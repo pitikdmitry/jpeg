@@ -16,7 +16,7 @@ class ZigZag:
         counter += 1
 
         up = True
-        while counter < N * M - 1:
+        while counter < N * M:
             if not up:  #   down
                 while 0 <= i < N - 1 and 0 < j < M:
                     j -= 1
@@ -58,7 +58,7 @@ class ZigZag:
             self._counter += 1
             return
 
-        if self._counter < N * M - 1:
+        if self._counter < N * M:
             if not self._up:  #   down
                 if 0 <= self._i < N - 1 and 0 < self._j < M:
                     self._j -= 1
@@ -97,3 +97,12 @@ class ZigZag:
                     self._counter += 1
 
         return
+
+if __name__ == "__main__":
+    zig = ZigZag()
+    res_arr = create_zeros_list(8, 8)
+    for i in range(0, 64):
+        if i == 63:
+            print(63)
+        zig.put_in_zig_zag(res_arr, i)
+    # print(res_arr)

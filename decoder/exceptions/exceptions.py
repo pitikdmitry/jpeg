@@ -4,3 +4,7 @@ class BadMarkerException(BaseException):
 
 class HaffmanException(BaseException):
     pass
+
+
+class BadDecodeException(BaseException):
+    pass

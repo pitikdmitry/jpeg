@@ -2,7 +2,7 @@ from decoder.exceptions.exceptions import HaffmanException
 
 
 class Node:
-    def __init__(self, level: int, value: str = "0"):
+    def __init__(self, level: int, value: str = "node"):
         self._value = value
         self._level = level
         self._left = None
@@ -38,7 +38,7 @@ class HaffmanTree:
         self._arr = haff_arr_bytes
         self._ac_dc_id = ac_dc_id
         self._arr_of_nodes = []
-        self._root = Node(0)
+        self._root = Node(0, "root")
         self._build_tree()
 
     @property
@@ -62,7 +62,7 @@ class HaffmanTree:
                 return self._add_node(current_level, current_node.left, new_node)
             else:
                 return -2
-        elif current_node is not None and current_node.left.value == "0":
+        elif current_node is not None and current_node.left.value == "node":
             # try to go left
             current_level += 1
             result = self._add_node(current_level, current_node.left, new_node)
@@ -86,7 +86,7 @@ class HaffmanTree:
                 return self._add_node(current_level, current_node.right, new_node)
             else:
                 return -2
-        elif current_node is not None and current_node.right.value == "0":
+        elif current_node is not None and current_node.right.value == "node":
             # try to go left
             current_level += 1
             result = self._add_node(current_level, current_node.right, new_node)
@@ -142,11 +142,19 @@ class HaffmanTree:
             if c == "0" and current_node.left is not None:
                 current_node = current_node.left
             elif c == "0" and current_node.left is None:
+                if current_node.value == "node":
+                    return Node(0)
+                if current_node.value == "root":
+                    return Node(0, "root")
                 arr_for_index[0] = index
                 return current_node
             if c == "1" and current_node.right is not None:
                 current_node = current_node.right
             elif c == "1" and current_node.right is None:
+                if current_node.value == "node":
+                    return Node(0)
+                if current_node.value == "root":
+                    return Node(0, "root")
                 arr_for_index[0] = index
                 return current_node
             index += 1
