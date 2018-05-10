@@ -4,6 +4,7 @@ from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
 from decoder.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, multiply_matrix
+from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.zig_zag import ZigZag
 
@@ -180,6 +181,12 @@ def quantization(image_info: ImageInfo):
     return
 
 
+def i_dct(image_info: ImageInfo):
+    res = idct(image_info.y_channels[0])
+    pass
+
+
+
 with open("favicon.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
@@ -192,6 +199,7 @@ with open("favicon.jpg", "rb") as f:
         parse_ffc4(bytes_array, image_info)
         parse_ffda(bytes_array, image_info)
         quantization(image_info)
+        i_dct(image_info)
     except BadMarkerException as e:
         print("Bad marker exc")
 # даюовить проверку что заполнили всю матрицу
