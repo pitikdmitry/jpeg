@@ -28,3 +28,18 @@ def create_zeros_list(N, M):
             result[i].append(0)
 
     return result
+
+
+def get_array_from_list(l: []):
+    result = np.asarray(l, dtype=float)
+    return result
+
+
+def multiply_matrix(matrix1, matrix2):
+    res = create_zeros_list(len(matrix1[0]), len(matrix1[1]))
+    for i in range(len(matrix1)):
+        for j in range(len(matrix2[0])):
+            for k in range(len(matrix2)):
+                # resulted matrix
+                res[i][j] += matrix1[i][k] * matrix2[k][j]
+    return res

@@ -1,7 +1,9 @@
+import numpy as np
+
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
 from decoder.image_info import ImageInfo
-from decoder.utils.array_utils import create_zeros_list
+from decoder.utils.array_utils import create_zeros_list, multiply_matrix
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.zig_zag import ZigZag
 
@@ -37,7 +39,7 @@ def parse_ffdb(bytes_array: BytesArray, image_info: ImageInfo):     #   табл
         header = bytes_array[header_index:header_index + 3]  # длина заголовока всегда 3 байта
         quantization_arr = bytes_array[start_index:end_index]
         quantization_table = zig_zag.zig_zag_order(quantization_arr)
-        image_info.quantization_tables.append(quantization_table)
+        image_info.add_quantization_table(quantization_table)
 
 
 def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информация о картинке(р - ры)
@@ -88,32 +90,37 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         for i in range(0, 4):
             zig_zag = ZigZag()
             res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+            image_info.add_y_channel(res_y_arr)
         cb_info = ffda_data[7:9]
         zig_zag = ZigZag()
-        res_cb_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+        res_cb_arr = parse_channel(coded_data_binary, cb_info, image_info, zig_zag, arr_for_index)
+        image_info.add_cb_channel(res_cb_arr)
         zig_zag = ZigZag()
         cr_info = ffda_data[9:11]
-        res_cr_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+        res_cr_arr = parse_channel(coded_data_binary, cr_info, image_info, zig_zag, arr_for_index)
+        image_info.add_cr_channel(res_cr_arr)
     elif amount_of_components == 1:
         y_info = ffda_data[5:7]
-        zig_zag = ZigZag()
-        res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag)
+        for i in range(0, 4):
+            zig_zag = ZigZag()
+            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+            image_info.add_y_channel(res_y_arr)
 
 
-def parse_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
+def parse_channel(code: str, channel_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
     result_array = create_zeros_list(8, 8)
     haffman_trees = image_info.haffman_trees
     dc_haff_tree = None
     ac_haff_tree = None
 
-    y_dc_table_num = int(y_info[1][0])
-    y_ac_table_num = int(y_info[1][1])
+    dc_table_num = int(channel_info[1][0])
+    ac_table_num = int(channel_info[1][1])
     for tree in haffman_trees:
-        if int(tree.ac_dc_id[1]) == y_dc_table_num:
+        if int(tree.ac_dc_id[1]) == dc_table_num:
             if int(tree.ac_dc_id[0]) == 0:
                 dc_haff_tree = tree
 
-        if int(tree.ac_dc_id[1]) == y_ac_table_num:
+        if int(tree.ac_dc_id[1]) == ac_table_num:
             if int(tree.ac_dc_id[0]) == 1:
                 ac_haff_tree = tree
 
@@ -122,7 +129,7 @@ def parse_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag
     dc_koef = 0
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
-    if dc.value != "0":
+    if dc.value != "0" and dc.value != "00":
         dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, int(dc.value))
         if dc_koef[0] != "1":
             dc_koef = int(dc_koef, 2) - 2 ** int(dc.value) + 1
@@ -157,6 +164,22 @@ def parse_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag
         ac = ac_haff_tree.get_next_value(code, arr_for_index)
 
 
+def quantization(image_info: ImageInfo):
+    if len(image_info.quantization_tables) != 2:
+        return
+
+    for i in range(0, len(image_info.y_channels)):
+        image_info.y_channels[i] = np.multiply(image_info.y_channels[i], image_info.quantization_tables[0])
+
+    for i in range(0, len(image_info.cb_channels)):
+        image_info.cb_channels[i] = image_info.cb_channels[i] * image_info.quantization_tables[1]
+
+    for i in range(0, len(image_info.cr_channels)):
+        image_info.cr_channels[i] = image_info.cr_channels[i] * image_info.quantization_tables[1]
+
+    return
+
+
 with open("favicon.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
@@ -168,6 +191,7 @@ with open("favicon.jpg", "rb") as f:
         parse_ffc0(bytes_array, image_info)
         parse_ffc4(bytes_array, image_info)
         parse_ffda(bytes_array, image_info)
+        quantization(image_info)
     except BadMarkerException as e:
         print("Bad marker exc")
 # даюовить проверку что заполнили всю матрицу
