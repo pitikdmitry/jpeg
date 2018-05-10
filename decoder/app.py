@@ -87,16 +87,20 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         y_info = ffda_data[5:7]
         for i in range(0, 4):
             zig_zag = ZigZag()
-            parse_y_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
         cb_info = ffda_data[7:9]
+        zig_zag = ZigZag()
+        res_cb_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+        zig_zag = ZigZag()
         cr_info = ffda_data[9:11]
+        res_cr_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
     elif amount_of_components == 1:
         y_info = ffda_data[5:7]
         zig_zag = ZigZag()
-        parse_y_channel(coded_data_binary, y_info, image_info, zig_zag)
+        res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag)
 
 
-def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
+def parse_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
     result_array = create_zeros_list(8, 8)
     haffman_trees = image_info.haffman_trees
     dc_haff_tree = None
@@ -130,7 +134,7 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
     while True:
         if ac.value == "root" or ac.value == "node":
             image_info.y_channels.append(result_array)
-            return
+            return result_array
 
         amount_zeros = int(ac.value[0])
         for i in range(0, amount_zeros):
@@ -138,8 +142,9 @@ def parse_y_channel(code: str, y_info: str, image_info: ImageInfo, zig_zag: ZigZ
 
         length_of_koef = int(ac.value[1])
         if length_of_koef == 0:
-            ac = ac_haff_tree.get_next_value(code, arr_for_index)
-            continue    # may be need to add 0
+            return result_array
+            # ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            # continue    # may be need to add 0
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             a = int(ac_koef, 2)
@@ -165,3 +170,4 @@ with open("favicon.jpg", "rb") as f:
         parse_ffda(bytes_array, image_info)
     except BadMarkerException as e:
         print("Bad marker exc")
+# даюовить проверку что заполнили всю матрицу
