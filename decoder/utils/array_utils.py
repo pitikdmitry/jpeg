@@ -84,3 +84,5 @@ def multiply_2d_matrixes(matrix1: [], matrix2: []):
             raise BadMatrixesMultiplyException
         for j in range(0, len(matrix1[i])):
             res[i][j] = matrix1[i][j] * matrix2[i][j]
+
+    return res

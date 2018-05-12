@@ -226,10 +226,9 @@ def quantization(image_info: ImageInfo):
     for comp in image_info.components:
         quantization_table_id = comp.quantization_table_id
         quantization_table = image_info.get_quantization_table_by_id(quantization_table_id)
-        for block in comp.array_of_blocks:
-            block = multiply_2d_matrixes(block, quantization_table)
+        for i, block in enumerate(comp.array_of_blocks):
+            comp.array_of_blocks[i] = multiply_2d_matrixes(block, quantization_table.table)
 
-    return
 
 
 def i_dct(image_info: ImageInfo):
