@@ -1,6 +1,7 @@
 import numpy as np
 
 from decoder.utils.array_utils import get_array_from_list
+from decoder.utils.quantization_table import QuantizationTable
 
 
 class ImageInfo:
@@ -62,13 +63,15 @@ class ImageInfo:
         # arr = l
         self._cr_channels.append(arr)
 
-    def add_quantization_table(self, id: int, l: []):
-        for i in range(0, len(l)):
-            for j in range(0, len(l[0])):
-                l[i][j] = int(l[i][j], 16)
+    def add_quantization_table(self, quantization_table: QuantizationTable):
+        self._quantization_tables.append(quantization_table)
 
-        # res = np.asarray(l, dtype=int)
-        self._quantization_tables.append((id, l))
+    def add_info_to_quantization_table(self, id: int, horizontal_thinning: int, vertical_thinning: int):
+        for table in self._quantization_tables:
+            if table.id == id:
+                table.horizontal_thinning = horizontal_thinning
+                table.vertical_thinning = vertical_thinning
+                return
 
     @property
     def quantization_tables(self) -> []:

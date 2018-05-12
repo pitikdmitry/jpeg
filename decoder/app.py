@@ -5,10 +5,11 @@ from matplotlib import pyplot as plt
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength
-from decoder.image_info import ImageInfo
-from decoder.utils.array_utils import create_zeros_list, multiply_matrix, append_right, append_down
+from decoder.utils.image_info import ImageInfo
+from decoder.utils.array_utils import create_zeros_list, append_right, append_down
 from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
+from decoder.utils.quantization_table import QuantizationTable
 from decoder.utils.zig_zag import ZigZag
 
 
@@ -55,7 +56,7 @@ def parse_ffdb(bytes_array: BytesArray, image_info: ImageInfo):     #   табл
         quantization_table_index = ff_db_data_index + 3
         quantization_arr = ff_db_data[quantization_table_index:]
         quantization_table = zig_zag.zig_zag_order(quantization_arr)
-        image_info.add_quantization_table(quantization_table_id, quantization_table)
+        image_info.add_quantization_table(QuantizationTable(quantization_table_id, quantization_table))
 
 
 def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информация о картинке(р - ры)
@@ -90,22 +91,32 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
         horizontal_thinning = int(channel_data[1][0], 16)
         vertical_thinning = int(channel_data[1][1], 16)
         quantization_table_id = int(channel_data[2], 16)
+        image_info.add_info_to_quantization_table(quantization_table_id, horizontal_thinning, vertical_thinning)
+
         channel_info_index += 3
 
 
 def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
-    start_index = 0
-    while True:
-        haff_table_start = bytes_array.find_pair("ff", "c4", start=start_index)
-        if haff_table_start == -1:
-            break
-        haff_table_start += 2
-        header_length = 3
-        ffc4_header = bytes_array.read_n_bytes(haff_table_start, header_length)
-        haff_length = int(ffc4_header[0] + ffc4_header[1], 16)  # changed
-        ac_dc_id = ffc4_header[2]
-        haff_arr = bytes_array.read_n_bytes(haff_table_start + header_length, haff_length - header_length)
-        haff_tree = HaffmanTree(haff_arr, ac_dc_id)
+    ff_c4_indexes = bytes_array.find_all_pairs("ff", "c4")
+    if ff_c4_indexes == -1:
+        raise BadMarkerException
+
+    for ff_c4_index in ff_c4_indexes:
+        ff_c4_index += 2
+        ff_c4_length = int(bytes_array[ff_c4_index] + bytes_array[ff_c4_index + 1], 16)
+        ffc4_data = bytes_array[ff_c4_index: ff_c4_index + ff_c4_length]
+        ff_c4_data_index = 0
+
+        ac_dc_class = int(ffc4_data[2][0], 16)
+        haff_table_id = int(ffc4_data[2][1], 16)
+
+        haff_amount_length = 16
+        haff_amount_start = ff_c4_data_index + 3
+        haff_amount_arr = ffc4_data[haff_amount_start: haff_amount_start + haff_amount_length]
+
+        haff_values_start = haff_amount_start + haff_amount_length
+        haff_value_arr = ffc4_data[haff_values_start:]
+        haff_tree = HaffmanTree(haff_amount_arr, haff_value_arr, ac_dc_class, haff_table_id)
         # val0 = haff_tree.get_value("100")
         # val1 = haff_tree.get_value("101")
         # val2 = haff_tree.get_value("1100")
@@ -114,7 +125,6 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
         # val5 = haff_tree.get_value("11110")
 
         image_info.haffman_trees.append(haff_tree)
-        start_index = haff_table_start + haff_length
 
 
 def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan

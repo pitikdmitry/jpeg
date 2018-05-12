@@ -34,9 +34,11 @@ class Node:
 
 
 class HaffmanTree:
-    def __init__(self, haff_arr_bytes: [], ac_dc_id: str):
-        self._arr = haff_arr_bytes
-        self._ac_dc_id = ac_dc_id
+    def __init__(self, haff_amount_arr: [], haff_value_arr: [], ac_dc_class: int, haff_table_id: int):
+        self._haff_amount_arr = haff_amount_arr
+        self._haff_value_arr = haff_value_arr
+        self._ac_dc_class = ac_dc_class
+        self._haff_table_id = haff_table_id
         self._arr_of_nodes = []
         self._root = Node(0, "root")
         self._build_tree()
@@ -46,8 +48,12 @@ class HaffmanTree:
         return self._root
 
     @property
-    def ac_dc_id(self):
-        return self._ac_dc_id
+    def ac_dc_class(self) -> int:
+        return self._ac_dc_class
+
+    @property
+    def haff_table_id(self) -> int:
+        return self._haff_table_id
 
     def _add_node(self, current_level, current_node: Node, new_node: Node):
         #   1=ok 2=bad, need to go to another branch
@@ -100,15 +106,14 @@ class HaffmanTree:
             return -2
 
     def _parse_nodes(self):
-        amount_of_nodes = 16
         current_level = 1
-        current_index_for_val = 16  # 0...15 для количества
+        current_index_for_val = 0  # 0...15 для количества
 
-        for i in range(0, amount_of_nodes):
-            amount_of_nodes_on_cur_level = int(self._arr[i], 16)
+        for i in range(0, len(self._haff_amount_arr)):
+            amount_of_nodes_on_cur_level = int(self._haff_amount_arr[i], 16)
 
             for i in range(0 , amount_of_nodes_on_cur_level):
-                value = self._arr[current_index_for_val]
+                value = self._haff_value_arr[current_index_for_val]
                 node = Node(current_level, value)
                 self._arr_of_nodes.append(node)
                 current_index_for_val += 1
@@ -119,7 +124,7 @@ class HaffmanTree:
         self._parse_nodes()
         for i in range(0, len(self._arr_of_nodes)):
             node = self._arr_of_nodes[i]
-            self._add_node(0, self.root, node)
+            self._add_node(0, self.root, node)  # передаю current_level чтобы начать рекурсию
 
     def get_value_by_code(self, code: str):
         current_node = self.root
