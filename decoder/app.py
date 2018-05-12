@@ -396,7 +396,7 @@ def print_array(arr):
     print("")
 
 
-with open("5.jpg", "rb") as f:
+with open("23.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
