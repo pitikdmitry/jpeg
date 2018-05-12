@@ -8,3 +8,19 @@ class HaffmanException(BaseException):
 
 class BadDecodeException(BaseException):
     pass
+
+
+class ConcatenateException(BaseException):
+    pass
+
+
+class BadQuantizationValuesLength(BaseException):
+    pass
+
+
+class BadDimensionException(BaseException):
+    pass
+
+
+class BadChannelsAmountException(BaseException):
+    pass

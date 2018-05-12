@@ -1,5 +1,7 @@
 import numpy as np
 
+from decoder.exceptions.exceptions import ConcatenateException
+
 
 def create_num_py_array_float(input_list: []):
     np_arr = []
@@ -43,3 +45,30 @@ def multiply_matrix(matrix1, matrix2):
                 # resulted matrix
                 res[i][j] += matrix1[i][k] * matrix2[k][j]
     return res
+
+
+def append_right(matrix1, matrix2):
+    m_1_rows = len(matrix1)
+    m_2_rows = len(matrix2)
+
+    if m_1_rows != m_2_rows:
+        raise ConcatenateException
+
+    for i in range(0, m_1_rows):
+        matrix1.append(matrix2[i])
+
+    return matrix1
+
+
+def append_down(matrix1, matrix2):
+    m_1_rows = len(matrix1)
+    m_2_rows = len(matrix2)
+
+    if m_1_rows != m_2_rows:
+        raise ConcatenateException
+
+    for i in range(0, m_1_rows):
+        for j in range(0, len(matrix2[i])):
+            matrix1[i].append(matrix2[i][j])
+
+    return matrix1
