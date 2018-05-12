@@ -7,9 +7,22 @@ class ZigZag:
         self._i = 0
         self._j = 0
         self._counter = 0
+        self._N = 8
+        self._M = 8
+        self._arr = create_zeros_list(self._N, self._M)
+        self._size = 0
+        self._max_size = self._M * self._N
+
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def data(self) -> []:
+        return self._arr
 
     def zig_zag_order(self, arr):
-        N, M = 8, 8
+        N, M = self._N, self._M
         i, j, counter = 0, 0, 0
         result = create_zeros_list(N, M)
         result[i][j] = arr[counter]
@@ -50,11 +63,13 @@ class ZigZag:
 
         return result
 
-    def put_in_zig_zag(self, result, element):
-        N, M = 8, 8
+    def put_in_zig_zag(self, element):
+        N, M = self._N, self._M
+        if self._size + 1 > self._max_size:
+            return -1
 
         if self._counter == 0:
-            result[self._i][self._j] = element
+            self._arr[self._i][self._j] = element
             self._counter += 1
             return
 
@@ -63,7 +78,7 @@ class ZigZag:
                 if 0 <= self._i < N - 1 and 0 < self._j < M:
                     self._j -= 1
                     self._i += 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
                     return
                 else:
@@ -71,17 +86,17 @@ class ZigZag:
 
                 if 0 < self._i < N - 1:
                     self._i += 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
                 elif 0 <= self._j < M - 1:
                     self._j += 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
             else:   #   up
                 if 0 < self._i < N and 0 <= self._j < M - 1:
                     self._j += 1
                     self._i -= 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
                     return
                 else:
@@ -89,14 +104,16 @@ class ZigZag:
 
                 if 0 <= self._j < M - 1:
                     self._j += 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
                 elif 0 <= self._i < N - 1:
                     self._i += 1
-                    result[self._i][self._j] = element
+                    self._arr[self._i][self._j] = element
                     self._counter += 1
 
-        return
+        self._size += 1
+        return self._size
+
 
 if __name__ == "__main__":
     zig = ZigZag()

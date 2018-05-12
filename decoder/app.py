@@ -3,11 +3,12 @@ import math
 import numpy as np
 from skimage.io import imshow
 from matplotlib import pyplot as plt
+import scipy.fftpack
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    BadMatrixParametersException
+    BadMatrixParametersException, FullZigZagException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, append_right, multiply_2d_matrixes, append_down
@@ -196,7 +197,7 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             dc_koef = int(dc_koef, 2) - 2 ** length_to_read + 1
         else:
             dc_koef = int(dc_koef, 2)
-    zig_zag.put_in_zig_zag(result_array, dc_koef)
+    zig_zag.put_in_zig_zag(dc_koef)
 
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
@@ -207,7 +208,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         amount_zeros = int(ac.value[0], 16)    #   added 16
         for i in range(0, amount_zeros):
-            zig_zag.put_in_zig_zag(result_array, 0)
+            answer = zig_zag.put_in_zig_zag(0)
+            if answer == -1:
+                raise FullZigZagException
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
@@ -217,7 +220,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
         else:
             ac_koef = int(ac_koef, 2)
-        zig_zag.put_in_zig_zag(result_array, ac_koef)
+        answer = zig_zag.put_in_zig_zag(ac_koef)
+        if answer == -1:
+            raise FullZigZagException
         ac = ac_haff_tree.get_next_value(code, arr_for_index)
 
 
@@ -290,7 +295,7 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
         print_array(a)
         a = np.asarray(a, dtype=int)
         # a = a / 255
-        imshow(a)
+        plt.imshow(a)
         plt.show()
     return rgb_components_array
 
@@ -345,7 +350,7 @@ def print_array(arr):
     print("")
 
 
-with open("5.jpg", "rb") as f:
+with open("23.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата

@@ -44,3 +44,7 @@ class BadMatrixesMultiplyException(BaseException):
 
 class BadMatrixParametersException(BaseException):
     pass
+
+
+class FullZigZagException(BaseException):
+    pass
