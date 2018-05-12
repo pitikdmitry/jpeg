@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
-    BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException
+    BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, append_down
@@ -183,17 +183,21 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
     if dc.value != "0" and dc.value != "00":
-        dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, int(dc.value))
+        length_to_read = int(dc.value)
+        if length_to_read == 0:
+            raise LengthToReadZeroException
+        dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, length_to_read)
         if dc_koef[0] != "1":
-            dc_koef = int(dc_koef, 2) - 2 ** int(dc.value) + 1
+            dc_koef = int(dc_koef, 2) - 2 ** length_to_read + 1
         else:
             dc_koef = int(dc_koef, 2)
     zig_zag.put_in_zig_zag(result_array, dc_koef)
+
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
     while True:
-        if ac.value == "root" or ac.value == "node":
-            image_info.y_channels.append(result_array)
+        if ac.value == "root" or ac.value == "node" or ac.value == "00" or ac.value == "0":
+            component.array_of_blocks.append(result_array)
             return result_array
 
         amount_zeros = int(ac.value[0])
@@ -202,15 +206,10 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1])
         if length_of_koef == 0:
-            return result_array
-            # ac = ac_haff_tree.get_next_value(code, arr_for_index)
-            # continue    # may be need to add 0
+            raise LengthToReadZeroException
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
-            a = int(ac_koef, 2)
-            c = int(ac.value[1])
-            b = 2 ** int(ac.value[1])
-            ac_koef = int(ac_koef, 2) - 2 ** int(ac.value[1]) + 1
+            ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
         else:
             ac_koef = int(ac_koef, 2)
         zig_zag.put_in_zig_zag(result_array, ac_koef)

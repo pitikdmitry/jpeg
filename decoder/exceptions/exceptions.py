@@ -28,3 +28,7 @@ class BadChannelsAmountException(BaseException):
 
 class BadComponentsAmountException(BaseException):
     pass
+
+
+class LengthToReadZeroException(BaseException):
+    pass

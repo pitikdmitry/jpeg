@@ -8,6 +8,8 @@ class Component:
         self._dc_haff_table_id = -1
         self._ac_haff_table_id = -1
 
+        self._array_of_blocks = []
+
     @property
     def component_id(self) -> int:
         return self._component_id
@@ -39,3 +41,7 @@ class Component:
     @dc_haff_table_id.setter
     def dc_haff_table_id(self, id: int):
         self._dc_haff_table_id = id
+
+    @property
+    def array_of_blocks(self) -> []:
+        return self._array_of_blocks
