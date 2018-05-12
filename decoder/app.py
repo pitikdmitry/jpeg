@@ -148,45 +148,34 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     coded_data_binary = ch_2[2:]
 
     components_index = ffc4_header_index + 3
+    arr_for_index = [0]
     for i in range(0, amount_of_components):
         component_id = int(ffc4_header_data[components_index], 16)
         dc_table_id = int(ffc4_header_data[components_index + 1][1])
         ac_table_id = int(ffc4_header_data[components_index + 1][0])
-        image_info.add_info_to_component(component_id, dc_table_id, ac_table_id)
+
+        component = image_info.get_component_by_id(component_id)
+        component.dc_haff_table_id = dc_table_id
+        component.ac_haff_table_id = ac_table_id
+        # image_info.add_info_to_component(component_id, dc_table_id, ac_table_id)
+
+        parse_channel(coded_data_binary, component, image_info, arr_for_index)
+
+        components_index += 2
 
 
-    #   в цикле для количества компонентов считываем по 2 байта(информацию о них)
-    arr_for_index = [0]
-    if amount_of_components == 3:
-        y_info = ffda_data[5:7]
-        for i in range(0, 4):
-            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, arr_for_index)
-            image_info.add_y_channel(res_y_arr)
-        cb_info = ffda_data[7:9]
-        res_cb_arr = parse_channel(coded_data_binary, cb_info, image_info, arr_for_index)
-        image_info.add_cb_channel(res_cb_arr)
-        cr_info = ffda_data[9:11]
-        res_cr_arr = parse_channel(coded_data_binary, cr_info, image_info, arr_for_index)
-        image_info.add_cr_channel(res_cr_arr)
-
-
-def parse_channel(code: str, channel_info: str, image_info: ImageInfo, arr_for_index: []):
+def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_for_index: []):
     result_array = create_zeros_list(8, 8)
     zig_zag = ZigZag()
-    haffman_trees = image_info.haffman_trees
     dc_haff_tree = None
     ac_haff_tree = None
 
-    dc_table_num = int(channel_info[1][0])
-    ac_table_num = int(channel_info[1][1])
-    for tree in haffman_trees:
-        if int(tree.ac_dc_id[1]) == dc_table_num:
-            if int(tree.ac_dc_id[0]) == 0:
-                dc_haff_tree = tree
+    for tree in image_info.haffman_trees:
+        if tree.ac_dc_class == 0 and tree.haff_table_id == component.dc_haff_table_id: # если таблица для dc и если совпадает id
+            dc_haff_tree = tree
 
-        if int(tree.ac_dc_id[1]) == ac_table_num:
-            if int(tree.ac_dc_id[0]) == 1:
-                ac_haff_tree = tree
+        if tree.ac_dc_class == 1 and tree.haff_table_id == component.ac_haff_table_id: # если таблица для ac и если совпадает id
+            ac_haff_tree = tree
 
     #   reading dc
     dc = dc_haff_tree.get_next_value(code, arr_for_index)

@@ -77,6 +77,11 @@ class ImageInfo:
                 comp.dc_haff_table_id = dc_table_id
                 comp.ac_haff_table_id = ac_table_id
 
+    def get_component_by_id(self, component_id: int) -> Component:
+        for comp in self._components:
+            if comp.component_id == component_id:
+                return comp
+
     @property
     def quantization_tables(self) -> []:
         return self._quantization_tables
