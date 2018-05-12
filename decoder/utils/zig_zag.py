@@ -18,6 +18,10 @@ class ZigZag:
         return self._size
 
     @property
+    def max_size(self) -> int:
+        return self._max_size
+
+    @property
     def data(self) -> []:
         return self._arr
 

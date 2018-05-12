@@ -8,7 +8,7 @@ import scipy.fftpack
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    BadMatrixParametersException, FullZigZagException
+    BadMatrixParametersException, FullZigZagException, CodedDataParserException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, append_right, multiply_2d_matrixes, append_down
@@ -169,6 +169,10 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         component.substract_dc()
         components_index += 2
 
+    length_of_data = len(coded_data_binary)
+    if arr_for_index != len(coded_data_binary) - 1: # 136 for favicon
+        raise CodedDataParserException
+
 
 def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_for_index: []):
     result_array = create_zeros_list(N, M)
@@ -188,10 +192,11 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     dc_koef = 0
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
-    if dc.value != "0" and dc.value != "00":
+    if dc.value != "00":
         length_to_read = int(dc.value, 16)  #   changed to 16
         if length_to_read == 0:
             raise LengthToReadZeroException
+
         dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, length_to_read)
         if dc_koef[0] != "1":
             dc_koef = int(dc_koef, 2) - 2 ** length_to_read + 1
@@ -202,7 +207,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
     while True:
-        if ac.value == "root" or ac.value == "node" or ac.value == "00" or ac.value == "0":
+        if ac.value == "root" or ac.value == "node":
+            raise BadDecodeException
+        if ac.value == "00":
             component.array_of_blocks.append(result_array)
             return result_array
 
@@ -350,7 +357,7 @@ def print_array(arr):
     print("")
 
 
-with open("23.jpg", "rb") as f:
+with open("favicon.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата

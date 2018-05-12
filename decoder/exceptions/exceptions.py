@@ -48,3 +48,7 @@ class BadMatrixParametersException(BaseException):
 
 class FullZigZagException(BaseException):
     pass
+
+
+class CodedDataParserException(BaseException):
+    pass
