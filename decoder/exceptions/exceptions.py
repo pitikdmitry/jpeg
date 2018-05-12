@@ -40,3 +40,7 @@ class BadThinningException(BaseException):
 
 class BadMatrixesMultiplyException(BaseException):
     pass
+
+
+class BadMatrixParametersException(BaseException):
+    pass

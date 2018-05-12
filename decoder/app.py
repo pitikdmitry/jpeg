@@ -6,10 +6,11 @@ from matplotlib import pyplot as plt
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
-    BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException
+    BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
+    BadMatrixParametersException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
-from decoder.utils.array_utils import create_zeros_list, append_right, append_down, multiply_2d_matrixes
+from decoder.utils.array_utils import create_zeros_list, append_right, append_right, multiply_2d_matrixes, append_down
 from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.quantization_table import QuantizationTable
@@ -291,28 +292,33 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
     return rgb_components_array
 
 
-def merge_rgb_blocks(image_info: ImageInfo):
-    arrays = []
-    for i in range(0, len(image_info.y_channels)):
-        rgb = convert_ycbcr_to_rgb(image_info.y_channels[i], image_info.cb_channels[0], image_info.cr_channels[0])
-        arrays.append(rgb)
-    m_rows = 2
-    m_cols = 2
-    # for i in range(m_cols // 2):
+def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
+    if image_info.width % M != 0 or image_info.height % N != 0:
+        raise BadMatrixParametersException
+
+    m_cols = int(image_info.width / M)
+    m_rows = int(image_info.height / N)
 
     rows = []
 
-    for i in range(0, m_cols):
+    for i in range(0, m_rows):
         #filling one row of matrixes
         one_row = []
         for j in range(0, m_cols):
-            first = arrays.pop(0)
+            first = rgb_components_array.pop(0)
             one_row.append(first)
         while len(one_row) > 1:
             first = one_row.pop(0)
+            print_array(first)
+            print("")
             second = one_row.pop(0)
+            print_array(second)
+            print("")
             first_second_conc = append_right(first, second)
-            one_row.append(first_second_conc + one_row)
+            print_array(first_second_conc)
+            print("")
+            new_arr = [first_second_conc + one_row]
+            one_row = new_arr
 
         rows.append(one_row[0])
 
@@ -325,6 +331,13 @@ def merge_rgb_blocks(image_info: ImageInfo):
 
     result_matrix = np.asarray(result_matrix[0], dtype=int)
     return result_matrix
+
+
+def print_array(arr):
+    for i in range(0, len(arr)):
+        for j in range(0, len(arr[i])):
+            print(int(arr[i][j][0]), end=" ")
+        print("")
 
 
 with open("favicon.jpg", "rb") as f:
@@ -341,6 +354,7 @@ with open("favicon.jpg", "rb") as f:
     quantization(image_info)
     i_dct(image_info)
     rgb_components_array = y_cb_cr_to_rgb(image_info)
+    result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
     # result_matrix = result_matrix / 255
     imshow(result_matrix)
     plt.show()
