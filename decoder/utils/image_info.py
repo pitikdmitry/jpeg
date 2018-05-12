@@ -1,6 +1,3 @@
-import numpy as np
-
-from decoder.utils.array_utils import get_array_from_list
 from decoder.utils.component import Component
 from decoder.utils.quantization_table import QuantizationTable
 
@@ -14,9 +11,9 @@ class ImageInfo:
         self._quantization_tables = []
         self._components = []
         self._haffman_trees = []
-        self._y_channels = []
-        self._cb_channels = []
-        self._cr_channels = []
+        self._y_blocks_amount = 0
+        self._cb_blocks_amount = 0
+        self._cr_blocks_amount = 0
 
     @property
     def comment(self) -> str:
@@ -46,24 +43,13 @@ class ImageInfo:
     def channels_amount(self) -> int:
         return self._channels_amount
 
+    @property
+    def components(self) -> []:
+        return self._components
+
     @channels_amount.setter
     def channels_amount(self, channels_amount: int):
         self._channels_amount = channels_amount
-
-    def add_y_channel(self, l: []):
-        arr = get_array_from_list(l)
-        # arr = l
-        self._y_channels.append(arr)
-
-    def add_cb_channel(self, l: []):
-        arr = get_array_from_list(l)
-        # arr = l
-        self._cb_channels.append(arr)
-
-    def add_cr_channel(self, l: []):
-        arr = get_array_from_list(l)
-        # arr = l
-        self._cr_channels.append(arr)
 
     def add_quantization_table(self, quantization_table: QuantizationTable):
         self._quantization_tables.append(quantization_table)
@@ -71,16 +57,15 @@ class ImageInfo:
     def add_component(self, component: Component):
         self._components.append(component)
 
-    def add_info_to_component(self, component_id: int, dc_table_id: int, ac_table_id: int):
-        for comp in self._components:
-            if comp.component_id == component_id:
-                comp.dc_haff_table_id = dc_table_id
-                comp.ac_haff_table_id = ac_table_id
-
     def get_component_by_id(self, component_id: int) -> Component:
         for comp in self._components:
             if comp.component_id == component_id:
                 return comp
+
+    def get_quantization_table_by_id(self, table_id: int):
+        for table in self._quantization_tables:
+            if table.id == table_id:
+                return table
 
     @property
     def quantization_tables(self) -> []:
@@ -91,13 +76,13 @@ class ImageInfo:
         return self._haffman_trees
 
     @property
-    def y_channels(self):
-        return self._y_channels
+    def y_channels_amount(self) -> int:
+        return self._y_blocks_amount
 
     @property
-    def cb_channels(self):
-        return self._cb_channels
+    def cb_channels_amount(self) -> int:
+        return self._cb_blocks_amount
 
     @property
-    def cr_channels(self):
-        return self._cr_channels
+    def cr_channels_amount(self) -> int:
+        return self._cr_blocks_amount

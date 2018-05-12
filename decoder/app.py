@@ -7,7 +7,7 @@ from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
-from decoder.utils.array_utils import create_zeros_list, append_right, append_down
+from decoder.utils.array_utils import create_zeros_list, append_right, append_down, multiply_2d_matrixes
 from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.quantization_table import QuantizationTable
@@ -15,6 +15,8 @@ from decoder.utils.zig_zag import ZigZag
 
 
 SECTION_TITLE_SIZE = 2
+N = 8   #   rows
+M = 8   #   cols
 
 
 def parse_ffd8(bytes_array: BytesArray):    #  заголовок
@@ -75,8 +77,8 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
 
     image_height = int(ff_c0_data[image_size_index] + ff_c0_data[image_size_index + 1], 16)
     image_width = int(ff_c0_data[image_size_index + 2] + ff_c0_data[image_size_index + 3], 16)
-    image_info.height = image_height
     image_info.width = image_width
+    image_info.height = image_height
 
     channels_amount_index = ff_db_data_index + 7
     channels_amount = int(ff_c0_data[channels_amount_index], 16)
@@ -92,7 +94,7 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
         horizontal_thinning = int(channel_data[1][0], 16)
         vertical_thinning = int(channel_data[1][1], 16)
         quantization_table_id = int(channel_data[2], 16)
-        image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id))
+        image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height))
 
         channel_info_index += 3
 
@@ -149,6 +151,7 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
 
     components_index = ffc4_header_index + 3
     arr_for_index = [0]
+
     for i in range(0, amount_of_components):
         component_id = int(ffc4_header_data[components_index], 16)
         dc_table_id = int(ffc4_header_data[components_index + 1][1])
@@ -157,15 +160,15 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         component = image_info.get_component_by_id(component_id)
         component.dc_haff_table_id = dc_table_id
         component.ac_haff_table_id = ac_table_id
-        # image_info.add_info_to_component(component_id, dc_table_id, ac_table_id)
 
-        parse_channel(coded_data_binary, component, image_info, arr_for_index)
+        for i in range(0, component.blocks_amount):
+            parse_channel(coded_data_binary, component, image_info, arr_for_index)
 
         components_index += 2
 
 
 def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_for_index: []):
-    result_array = create_zeros_list(8, 8)
+    result_array = create_zeros_list(N, M)
     zig_zag = ZigZag()
     dc_haff_tree = None
     ac_haff_tree = None
@@ -220,14 +223,11 @@ def quantization(image_info: ImageInfo):
     if len(image_info.quantization_tables) != 2:
         return
 
-    for i in range(0, len(image_info.y_channels)):
-        image_info.y_channels[i] = np.multiply(image_info.y_channels[i], image_info.quantization_tables[0])
-
-    for i in range(0, len(image_info.cb_channels)):
-        image_info.cb_channels[i] = image_info.cb_channels[i] * image_info.quantization_tables[1]
-
-    for i in range(0, len(image_info.cr_channels)):
-        image_info.cr_channels[i] = image_info.cr_channels[i] * image_info.quantization_tables[1]
+    for comp in image_info.components:
+        quantization_table_id = comp.quantization_table_id
+        quantization_table = image_info.get_quantization_table_by_id(quantization_table_id)
+        for block in comp.array_of_blocks:
+            block = multiply_2d_matrixes(block, quantization_table)
 
     return
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from decoder.exceptions.exceptions import ConcatenateException
+from decoder.exceptions.exceptions import ConcatenateException, BadMatrixesMultiplyException
 
 
 def create_num_py_array_float(input_list: []):
@@ -37,14 +37,14 @@ def get_array_from_list(l: []):
     return result
 
 
-def multiply_matrix(matrix1, matrix2):
-    res = create_zeros_list(len(matrix1[0]), len(matrix1[1]))
-    for i in range(len(matrix1)):
-        for j in range(len(matrix2[0])):
-            for k in range(len(matrix2)):
-                # resulted matrix
-                res[i][j] += matrix1[i][k] * matrix2[k][j]
-    return res
+# def multiply_matrix(matrix1, matrix2):
+#     res = create_zeros_list(len(matrix1[0]), len(matrix1[1]))
+#     for i in range(len(matrix1)):
+#         for j in range(len(matrix2[0])):
+#             for k in range(len(matrix2)):
+#                 # resulted matrix
+#                 res[i][j] += matrix1[i][k] * matrix2[k][j]
+#     return res
 
 
 def append_right(matrix1, matrix2):
@@ -72,3 +72,15 @@ def append_down(matrix1, matrix2):
             matrix1[i].append(matrix2[i][j])
 
     return matrix1
+
+
+def multiply_2d_matrixes(matrix1: [], matrix2: []):
+    res = create_zeros_list(len(matrix1), len(matrix1[0]))
+
+    if len(matrix1) != len(matrix2):
+        raise BadMatrixesMultiplyException
+    for i in range(0, len(matrix1)):
+        if len(matrix1[i]) != len(matrix2[i]):
+            raise BadMatrixesMultiplyException
+        for j in range(0, len(matrix1[i])):
+            res[i][j] = matrix1[i][j] * matrix2[i][j]

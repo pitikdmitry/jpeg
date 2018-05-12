@@ -8,7 +8,6 @@ class QuantizationTable:
 
         self._table = table
 
-
     @property
     def id(self) -> int:
         return self._id

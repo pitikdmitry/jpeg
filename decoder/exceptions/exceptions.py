@@ -32,3 +32,11 @@ class BadComponentsAmountException(BaseException):
 
 class LengthToReadZeroException(BaseException):
     pass
+
+
+class BadThinningException(BaseException):
+    pass
+
+
+class BadMatrixesMultiplyException(BaseException):
+    pass
