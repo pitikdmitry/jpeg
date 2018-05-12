@@ -1,3 +1,5 @@
+import math
+
 from decoder.exceptions.exceptions import BadThinningException
 
 
@@ -31,8 +33,9 @@ class Component:
                               (self._image_height / self._M) * (self.vertical_thinning ** 2)
         self._blocks_amount /= 4
         if not self._is_int(self._blocks_amount):
-            raise BadThinningException
-        self._blocks_amount = int(self._blocks_amount)
+            pass
+            # raise BadThinningException
+        self._blocks_amount = math.floor(self._blocks_amount)
 
     def _is_int(self, n):
         return int(n) == float(n)

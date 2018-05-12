@@ -30,8 +30,10 @@ def parse_ffd8(bytes_array: BytesArray):    #  заголовок
 
 def parse_fffe(bytes_array: BytesArray, image_info: ImageInfo):    #   комментарий
     ff_ee_start = 2
-    if bytes_array[ff_ee_start] + bytes_array[ff_ee_start + 1] != 'fffe':
-        raise BadMarkerException
+    if bytes_array[ff_ee_start] + bytes_array[ff_ee_start + 1] != 'fffe' \
+            or bytes_array[ff_ee_start] + bytes_array[ff_ee_start + 1] != 'ffe0':
+        # raise BadMarkerException
+        pass
 
     ff_ee_header_size = 2
     comment = bytes_array.read_n_bytes(ff_ee_start + SECTION_TITLE_SIZE, ff_ee_header_size)
@@ -100,6 +102,7 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
         image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height))
 
         channel_info_index += 3
+    return
 
 
 def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
@@ -123,12 +126,6 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
         haff_values_start = haff_amount_start + haff_amount_length
         haff_value_arr = ffc4_data[haff_values_start:]
         haff_tree = HaffmanTree(haff_amount_arr, haff_value_arr, ac_dc_class, haff_table_id)
-        # val0 = haff_tree.get_value("100")
-        # val1 = haff_tree.get_value("101")
-        # val2 = haff_tree.get_value("1100")
-        # val3 = haff_tree.get_value("1101")
-        # val4 = haff_tree.get_value("1110")
-        # val5 = haff_tree.get_value("11110")
 
         image_info.haffman_trees.append(haff_tree)
 
@@ -191,7 +188,7 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
     if dc.value != "0" and dc.value != "00":
-        length_to_read = int(dc.value)
+        length_to_read = int(dc.value, 16)  #   changed to 16
         if length_to_read == 0:
             raise LengthToReadZeroException
         dc_koef = dc_haff_tree.get_next_n_bits(code, arr_for_index, length_to_read)
@@ -208,11 +205,11 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             component.array_of_blocks.append(result_array)
             return result_array
 
-        amount_zeros = int(ac.value[0])
+        amount_zeros = int(ac.value[0], 16)    #   added 16
         for i in range(0, amount_zeros):
             zig_zag.put_in_zig_zag(result_array, 0)
 
-        length_of_koef = int(ac.value[1])
+        length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
             raise LengthToReadZeroException
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
@@ -247,19 +244,19 @@ def convert_ycbcr_to_rgb(y, cb, cr):
         for j in range(0, len(y[0])):
             R = y[i][j] + 1.402 * cr[i / 2][j / 2] + 128
             if R > 255:
-                R = 255
+                R = float(255)
             if R < 0:
-                R = 0
+                R = float(0)
             G = y[i][j] - 0.34414 * cb[i / 2][j / 2] - 0.71414 * cr[i / 2][j / 2] + 128
             if G > 255:
-                G = 255
+                G = float(255)
             if G < 0:
-                G = 0
+                G = float(0)
             B = y[i][j] + 1.772 * cb[i / 2][j / 2] + 128
             if B > 255:
-                B = 255
+                B = float(255)
             if B < 0:
-                B = 0
+                B = float(0)
             res[i][j] = [R, G, B]
     return res
 
@@ -289,6 +286,12 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
         j += 1
         k += 1
 
+    for a in rgb_components_array:
+        print_array(a)
+        a = np.asarray(a, dtype=int)
+        # a = a / 255
+        imshow(a)
+        plt.show()
     return rgb_components_array
 
 
@@ -338,9 +341,11 @@ def print_array(arr):
         for j in range(0, len(arr[i])):
             print(int(arr[i][j][0]), end=" ")
         print("")
+    print("")
+    print("")
 
 
-with open("favicon.jpg", "rb") as f:
+with open("5.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
@@ -354,9 +359,9 @@ with open("favicon.jpg", "rb") as f:
     quantization(image_info)
     i_dct(image_info)
     rgb_components_array = y_cb_cr_to_rgb(image_info)
-    result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
+    # result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
     # result_matrix = result_matrix / 255
-    imshow(result_matrix)
-    plt.show()
+    # imshow(result_matrix)
+    # plt.show()
 
 # даюовить проверку что заполнили всю матрицу
