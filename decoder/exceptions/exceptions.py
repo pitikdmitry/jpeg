@@ -24,3 +24,7 @@ class BadDimensionException(BaseException):
 
 class BadChannelsAmountException(BaseException):
     pass
+
+
+class BadComponentsAmountException(BaseException):
+    pass

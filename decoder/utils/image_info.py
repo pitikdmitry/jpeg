@@ -1,6 +1,7 @@
 import numpy as np
 
 from decoder.utils.array_utils import get_array_from_list
+from decoder.utils.component import Component
 from decoder.utils.quantization_table import QuantizationTable
 
 
@@ -11,6 +12,7 @@ class ImageInfo:
         self._height = 0
         self._channels_amount = 0
         self._quantization_tables = []
+        self._components = []
         self._haffman_trees = []
         self._y_channels = []
         self._cb_channels = []
@@ -66,12 +68,14 @@ class ImageInfo:
     def add_quantization_table(self, quantization_table: QuantizationTable):
         self._quantization_tables.append(quantization_table)
 
-    def add_info_to_quantization_table(self, id: int, horizontal_thinning: int, vertical_thinning: int):
-        for table in self._quantization_tables:
-            if table.id == id:
-                table.horizontal_thinning = horizontal_thinning
-                table.vertical_thinning = vertical_thinning
-                return
+    def add_component(self, component: Component):
+        self._components.append(component)
+
+    def add_info_to_component(self, component_id: int, dc_table_id: int, ac_table_id: int):
+        for comp in self._components:
+            if comp.component_id == component_id:
+                comp.dc_haff_table_id = dc_table_id
+                comp.ac_haff_table_id = ac_table_id
 
     @property
     def quantization_tables(self) -> []:

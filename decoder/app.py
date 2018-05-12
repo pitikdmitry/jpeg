@@ -4,7 +4,8 @@ from matplotlib import pyplot as plt
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
-    BadChannelsAmountException, BadQuantizationValuesLength
+    BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException
+from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, append_down
 from decoder.utils.dct import idct
@@ -87,11 +88,11 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
     channel_info_index = channels_amount_index + 1
     for i in range(0, channels_amount):
         channel_data = ff_c0_data[channel_info_index: channel_info_index + channel_data_size]
-        id = int(channel_data[0], 16)
+        component_id = int(channel_data[0], 16)
         horizontal_thinning = int(channel_data[1][0], 16)
         vertical_thinning = int(channel_data[1][1], 16)
         quantization_table_id = int(channel_data[2], 16)
-        image_info.add_info_to_quantization_table(quantization_table_id, horizontal_thinning, vertical_thinning)
+        image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id))
 
         channel_info_index += 3
 
@@ -130,8 +131,14 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
 def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ffda_data = bytes_array.read_from_one_pair_to_other("ffda", "ffd9")
     header_length = int(ffda_data[2] + ffda_data[3], 16)   #   в первых ьдвух байтах длина только для заголовочной части а не для всей секции
-    ffc4_header = ffda_data[4: header_length]
-    amount_of_components = int(ffc4_header[0], 16)
+
+    ffc4_header_data = ffda_data[SECTION_TITLE_SIZE: header_length]
+    ffc4_header_index = 0
+    amount_of_components = int(ffc4_header_data[ffc4_header_index + 2], 16)
+    if amount_of_components != 3:
+        raise BadComponentsAmountException
+
+    # берем данные и переводим в двоичную строку(0111010...)
     coded_data = ffda_data[(header_length + 2):]
     coded_data_str = ""
     for ch in coded_data:
@@ -140,32 +147,32 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ch_2 = bin(ch_10)
     coded_data_binary = ch_2[2:]
 
+    components_index = ffc4_header_index + 3
+    for i in range(0, amount_of_components):
+        component_id = int(ffc4_header_data[components_index], 16)
+        dc_table_id = int(ffc4_header_data[components_index + 1][1])
+        ac_table_id = int(ffc4_header_data[components_index + 1][0])
+        image_info.add_info_to_component(component_id, dc_table_id, ac_table_id)
+
+
     #   в цикле для количества компонентов считываем по 2 байта(информацию о них)
     arr_for_index = [0]
     if amount_of_components == 3:
         y_info = ffda_data[5:7]
         for i in range(0, 4):
-            zig_zag = ZigZag()
-            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
+            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, arr_for_index)
             image_info.add_y_channel(res_y_arr)
         cb_info = ffda_data[7:9]
-        zig_zag = ZigZag()
-        res_cb_arr = parse_channel(coded_data_binary, cb_info, image_info, zig_zag, arr_for_index)
+        res_cb_arr = parse_channel(coded_data_binary, cb_info, image_info, arr_for_index)
         image_info.add_cb_channel(res_cb_arr)
-        zig_zag = ZigZag()
         cr_info = ffda_data[9:11]
-        res_cr_arr = parse_channel(coded_data_binary, cr_info, image_info, zig_zag, arr_for_index)
+        res_cr_arr = parse_channel(coded_data_binary, cr_info, image_info, arr_for_index)
         image_info.add_cr_channel(res_cr_arr)
-    elif amount_of_components == 1:
-        y_info = ffda_data[5:7]
-        for i in range(0, 4):
-            zig_zag = ZigZag()
-            res_y_arr = parse_channel(coded_data_binary, y_info, image_info, zig_zag, arr_for_index)
-            image_info.add_y_channel(res_y_arr)
 
 
-def parse_channel(code: str, channel_info: str, image_info: ImageInfo, zig_zag: ZigZag, arr_for_index: []):
+def parse_channel(code: str, channel_info: str, image_info: ImageInfo, arr_for_index: []):
     result_array = create_zeros_list(8, 8)
+    zig_zag = ZigZag()
     haffman_trees = image_info.haffman_trees
     dc_haff_tree = None
     ac_haff_tree = None
