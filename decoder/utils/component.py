@@ -37,6 +37,17 @@ class Component:
     def _is_int(self, n):
         return int(n) == float(n)
 
+    def substract_dc(self):
+        if self._blocks_amount <= 0:
+            return
+
+        dc_koef_prev = self._array_of_blocks[0][0][0]
+        for i in range(1, self._blocks_amount):
+            dc_koef_current = self._array_of_blocks[i][0][0]
+            dc_koef_current = dc_koef_prev + dc_koef_current
+            dc_koef_prev = dc_koef_current
+            self._array_of_blocks[i][0][0] = dc_koef_current
+
     @property
     def component_id(self) -> int:
         return self._component_id

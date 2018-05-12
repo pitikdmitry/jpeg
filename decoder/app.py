@@ -164,6 +164,8 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         for i in range(0, component.blocks_amount):
             parse_channel(coded_data_binary, component, image_info, arr_for_index)
 
+        # для каждого канала вычитаем dcc коэффициенты предыдущего
+        component.substract_dc()
         components_index += 2
 
 
@@ -230,14 +232,10 @@ def quantization(image_info: ImageInfo):
             comp.array_of_blocks[i] = multiply_2d_matrixes(block, quantization_table.table)
 
 
-
 def i_dct(image_info: ImageInfo):
-    for i in range(0, len(image_info.y_channels)):
-        image_info.y_channels[i] = idct(image_info.y_channels[i])
-    for i in range(0, len(image_info.cb_channels)):
-        image_info.cb_channels[i] = idct(image_info.cb_channels[i])
-    for i in range(0, len(image_info.cr_channels)):
-        image_info.cr_channels[i] = idct(image_info.cr_channels[i])
+    for comp in image_info.components:
+        for i, block in enumerate(comp.array_of_blocks):
+            comp.array_of_blocks[i] = idct(block)
 
 
 def convert_ycbcr_to_rgb(y, cb, cr):
