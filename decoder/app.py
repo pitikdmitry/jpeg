@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from skimage.io import imshow
 from matplotlib import pyplot as plt
@@ -262,6 +264,34 @@ def convert_ycbcr_to_rgb(y, cb, cr):
 
 
 def y_cb_cr_to_rgb(image_info: ImageInfo):
+    y_comp_index = 1
+    cb_comp_index = 2
+    cr_comp_index = 3
+
+    y_component = image_info.get_component_by_id(y_comp_index)
+    cb_component = image_info.get_component_by_id(cb_comp_index)
+    cr_component = image_info.get_component_by_id(cr_comp_index)
+
+    rgb_components_array = []
+    koef_cb = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
+              (cb_component.horizontal_thinning ** 2 + cb_component.vertical_thinning ** 2)
+    koef_cr = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
+              (cr_component.horizontal_thinning ** 2 + cr_component.vertical_thinning ** 2)
+    j = 0   # j counter for cb
+    k = 0   # for cr
+    for i in range(0, len(y_component.array_of_blocks)):
+        cb_index = math.floor(i / koef_cb)
+        cr_index = math.floor(i / koef_cr)
+        rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i] , cb_component.array_of_blocks[cb_index],
+                                             cr_component.array_of_blocks[cr_index])
+        rgb_components_array.append(rgb_component)
+        j += 1
+        k += 1
+
+    return rgb_components_array
+
+
+def merge_rgb_blocks(image_info: ImageInfo):
     arrays = []
     for i in range(0, len(image_info.y_channels)):
         rgb = convert_ycbcr_to_rgb(image_info.y_channels[i], image_info.cb_channels[0], image_info.cr_channels[0])
@@ -310,7 +340,7 @@ with open("favicon.jpg", "rb") as f:
     parse_ffda(bytes_array, image_info)
     quantization(image_info)
     i_dct(image_info)
-    result_matrix = y_cb_cr_to_rgb(image_info)
+    rgb_components_array = y_cb_cr_to_rgb(image_info)
     # result_matrix = result_matrix / 255
     imshow(result_matrix)
     plt.show()
