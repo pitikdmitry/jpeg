@@ -31,7 +31,7 @@ class Component:
 
         self._blocks_amount = (self._image_width / self._N) * (self._horizontal_thinning ** 2) + \
                               (self._image_height / self._M) * (self.vertical_thinning ** 2)
-        self._blocks_amount /= 4
+        # self._blocks_amount = 4
         if not self._is_int(self._blocks_amount):
             pass
             # raise BadThinningException

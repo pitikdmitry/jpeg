@@ -151,9 +151,9 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     coded_data_binary = ch_2[2:]
 
     components_index = ffc4_header_index + 3
-    arr_for_index = [0]
 
     for i in range(0, amount_of_components):
+
         component_id = int(ffc4_header_data[components_index], 16)
         dc_table_id = int(ffc4_header_data[components_index + 1][1])
         ac_table_id = int(ffc4_header_data[components_index + 1][0])
@@ -162,20 +162,55 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         component.dc_haff_table_id = dc_table_id
         component.ac_haff_table_id = ac_table_id
 
-        for i in range(0, component.blocks_amount):
-            parse_channel(coded_data_binary, component, image_info, arr_for_index)
-
-        # для каждого канала вычитаем dcc коэффициенты предыдущего
-        component.substract_dc()
         components_index += 2
+    # for i in range(0, component.blocks_amount):
+    #     parse_channel(coded_data_binary, component, image_info, arr_for_index)
+    #
+    # # для каждого канала вычитаем dcc коэффициенты предыдущего
+    # component.substract_dc()
+    # components_index += 2
+    #
+    # length_of_data = len(coded_data_binary)
+    # length_index = arr_for_index[0]
+    # if arr_for_index[0] != len(coded_data_binary) - 1: # 136 for favicon
+    #     # raise CodedDataParserException
+    #     pass
+    parse_channels(image_info, coded_data_binary)
+
+
+def parse_channels(image_info: ImageInfo, coded_data_binary: str):
+    y_comp_index = 1
+    cb_comp_index = 2
+    cr_comp_index = 3
+
+    y_component = image_info.get_component_by_id(y_comp_index)
+    cb_component = image_info.get_component_by_id(cb_comp_index)
+    cr_component = image_info.get_component_by_id(cr_comp_index)
+
+    arr_for_index = [0]
+    koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
+    koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
+    if koef_cb != koef_cr:
+        raise BadComponentsAmountException
+    y_amount = 0
+
+    while y_amount < y_component.blocks_amount + 2:
+        for i in range(0, koef_cb):
+            parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
+            y_amount += 1
+
+        parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
+        parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
 
     length_of_data = len(coded_data_binary)
-    if arr_for_index != len(coded_data_binary) - 1: # 136 for favicon
-        raise CodedDataParserException
+    length_index = arr_for_index[0]
+    if arr_for_index[0] != len(coded_data_binary) - 1: # 136 for favicon
+        # raise CodedDataParserException
+        print("length_of_data: " + str(length_of_data) + " length_index: " + str(length_index))
+        pass
 
 
 def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_for_index: []):
-    result_array = create_zeros_list(N, M)
     zig_zag = ZigZag()
     dc_haff_tree = None
     ac_haff_tree = None
@@ -210,8 +245,8 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
         if ac.value == "root" or ac.value == "node":
             raise BadDecodeException
         if ac.value == "00":
-            component.array_of_blocks.append(result_array)
-            return result_array
+            component.array_of_blocks.append(zig_zag.data)
+            return
 
         amount_zeros = int(ac.value[0], 16)    #   added 16
         for i in range(0, amount_zeros):
@@ -221,7 +256,11 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
-            raise LengthToReadZeroException
+            print("")
+            print("ARRAYFORINDEX", arr_for_index[0])
+            ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            continue
+            # raise LengthToReadZeroException
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
@@ -357,7 +396,7 @@ def print_array(arr):
     print("")
 
 
-with open("favicon.jpg", "rb") as f:
+with open("5.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
