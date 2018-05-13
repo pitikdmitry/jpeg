@@ -299,36 +299,56 @@ def quantization(image_info: ImageInfo):
 def i_dct(image_info: ImageInfo):
     for comp in image_info.components:
         for i, block in enumerate(comp.array_of_blocks):
-            # comp.array_of_blocks[i] = idct(block)
-            res1 = idct(block)
-            # res2 = scipy.fftpack.idct(scipy.fftpack.idct(block, axis=0), axis=1)
-            # res2 = scipy.fftpack.idct(block)
-
             comp.array_of_blocks[i] = idct(block)
     return
 
 
-def convert_ycbcr_to_rgb(y, cb, cr):
+def convert_ycbcr_to_rgb(y, cb, cr, part_number):
+    h_offset = 0
+    v_offset = 0
+    if part_number == 1:
+        h_offset = N // 2
+    elif part_number == 2:
+        v_offset = M // 2
+    if part_number == 3:
+        v_offset = M // 2
+        h_offset = N // 2
+
     res = create_zeros_list(N, M)
     for i in range(0, N):
         for j in range(0, M):
-            R = y[i][j] + 1.402 * cr[i // 2][j // 2] + 128
+            R = y[i][j] + 1.402 * cr[i // 2 + v_offset][j // 2 + h_offset] + 128
             if R > 255:
                 R = float(255)
             if R < 0:
                 R = float(0)
-            G = y[i][j] - 0.34414 * cb[i // 2][j // 2] - 0.71414 * cr[i // 2][j // 2] + 128
+            G = y[i][j] - 0.34414 * cb[i // 2 + v_offset][j // 2 + h_offset] - 0.71414 * cr[i // 2 + v_offset][j // 2 + h_offset] + 128
             if G > 255:
                 G = float(255)
             if G < 0:
                 G = float(0)
-            B = y[i][j] + 1.772 * cb[i // 2][j // 2] + 128
+            B = y[i][j] + 1.772 * cb[i // 2 + v_offset][j // 2 + h_offset] + 128
             if B > 255:
                 B = float(255)
             if B < 0:
                 B = float(0)
             res[i][j] = [R, G, B]
     return res
+
+
+def merge_one_block(one_block_arr: []):
+    if len(one_block_arr) != 4:
+        return
+
+    first = one_block_arr.pop(0)
+    second = one_block_arr.pop(0)
+    third = one_block_arr.pop(0)
+    fourth = one_block_arr.pop(0)
+
+    first_second_conc = append_right(first, second)
+    third_fourth_conc = append_right(third, fourth)
+    four_conc = append_down(first_second_conc, third_fourth_conc)
+    return four_conc
 
 
 def y_cb_cr_to_rgb(image_info: ImageInfo):
@@ -342,20 +362,23 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
 
     rgb_components_array = []
     koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
-    koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
-    j = 0   # j counter for cb
-    k = 0   # for cr
-    i = 0
-    while i < len(y_component.array_of_blocks):
-        cb_index = math.floor(i / koef_cb)
-        cr_index = math.floor(i / koef_cr)
+    y_index = 0
+    cb_index = 0
+    cr_index = 0
 
-        rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[cb_index],
-                                             cr_component.array_of_blocks[cr_index])
-        rgb_components_array.append(rgb_component)
-        j += 1
-        k += 1
-        i += 1
+    while y_index < y_component.blocks_amount:
+        one_block_arr = []
+        for part_number in range(0, 4):
+            rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[y_index], cb_component.array_of_blocks[cb_index],
+                                             cr_component.array_of_blocks[cr_index], part_number)
+            one_block_arr.append(rgb_component)
+            y_index += 1
+
+        one_block = merge_one_block(one_block_arr)
+        cb_index += 1
+        cr_index += 1
+
+        rgb_components_array.append(one_block)
 
     return rgb_components_array
 
@@ -364,28 +387,28 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     if image_info.width % M != 0 or image_info.height % N != 0:
         raise BadMatrixParametersException
 
-    m_cols = int(image_info.width / M)
-    m_rows = int(image_info.height / N)
+    m_cols = math.floor(math.sqrt(len(rgb_components_array)))
+    m_rows = m_cols
 
-    blocks_from_squares = []
-    for i in range(0, len(rgb_components_array) // 4):
-        first = rgb_components_array.pop(0)
-        second = rgb_components_array.pop(0)
-        third = rgb_components_array.pop(0)
-        fourth = rgb_components_array.pop(0)
-
-        first_second_conc = append_right(first, second)
-        third_fourth_conc = append_right(third, fourth)
-        four_conc = append_down(first_second_conc, third_fourth_conc)
-
-        blocks_from_squares.append(four_conc)
-        # f = np.asarray(four_conc, dtype=int)
-        # imshow(f)
-        # plt.show()
-
-    m_rows = len(blocks_from_squares) // (N // 4)
-    m_cols = len(blocks_from_squares) // (M // 4)
-    rgb_components_array = blocks_from_squares
+    # blocks_from_squares = []
+    # for i in range(0, len(rgb_components_array) // 4):
+    #     first = rgb_components_array.pop(0)
+    #     second = rgb_components_array.pop(0)
+    #     third = rgb_components_array.pop(0)
+    #     fourth = rgb_components_array.pop(0)
+    #
+    #     first_second_conc = append_right(first, second)
+    #     third_fourth_conc = append_right(third, fourth)
+    #     four_conc = append_down(first_second_conc, third_fourth_conc)
+    #
+    #     blocks_from_squares.append(four_conc)
+    #     # f = np.asarray(four_conc, dtype=int)
+    #     # imshow(f)
+    #     # plt.show()
+    #
+    # m_rows = len(blocks_from_squares) // (N // 4)
+    # m_cols = len(blocks_from_squares) // (M // 4)
+    # rgb_components_array = blocks_from_squares
 
 
     # for i in range(0, len(rgb_components_array)):
