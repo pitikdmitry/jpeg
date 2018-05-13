@@ -36,7 +36,7 @@ def idct(fx):
                 for l in range(0, M):
                     cos_m_k = cos(((2 * m + 1) * k * pi) / (2 * M))
                     cos_n_l = cos(((2 * n + 1) * l * pi) / (2 * N))
-                    X_k_l = fx[k][l]   # действительная часть значения яркости пикселя
+                    X_k_l = fx[k][l]
 
                     c_k, c_l = 1, 1
                     if k == 0:
@@ -45,7 +45,7 @@ def idct(fx):
                         c_l = 1 / sqrt(2)
                     z += c_k * c_l * X_k_l * cos_m_k * cos_n_l
 
-            z = (z * 2) / sqrt(N * M)
+            z = (2 * z) / sqrt(M * N)
 
             result[m][n] = z
 

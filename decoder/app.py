@@ -299,25 +299,30 @@ def quantization(image_info: ImageInfo):
 def i_dct(image_info: ImageInfo):
     for comp in image_info.components:
         for i, block in enumerate(comp.array_of_blocks):
+            # comp.array_of_blocks[i] = idct(block)
+            res1 = idct(block)
+            # res2 = scipy.fftpack.idct(scipy.fftpack.idct(block, axis=0), axis=1)
+            # res2 = scipy.fftpack.idct(block)
+
             comp.array_of_blocks[i] = idct(block)
     return
 
 
 def convert_ycbcr_to_rgb(y, cb, cr):
-    res = create_zeros_list(len(y), len(y[0]))
-    for i in range(0, len(y)):
-        for j in range(0, len(y[0])):
-            R = y[i][j] + 1.402 * cr[i / 2][j / 2] + 128
+    res = create_zeros_list(N, M)
+    for i in range(0, N):
+        for j in range(0, M):
+            R = y[i][j] + 1.402 * cr[i // 2][j // 2] + 128
             if R > 255:
                 R = float(255)
             if R < 0:
                 R = float(0)
-            G = y[i][j] - 0.34414 * cb[i / 2][j / 2] - 0.71414 * cr[i / 2][j / 2] + 128
+            G = y[i][j] - 0.34414 * cb[i // 2][j // 2] - 0.71414 * cr[i // 2][j // 2] + 128
             if G > 255:
                 G = float(255)
             if G < 0:
                 G = float(0)
-            B = y[i][j] + 1.772 * cb[i / 2][j / 2] + 128
+            B = y[i][j] + 1.772 * cb[i // 2][j // 2] + 128
             if B > 255:
                 B = float(255)
             if B < 0:
@@ -352,13 +357,6 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
         k += 1
         i += 1
 
-
-    # for a in rgb_components_array:
-    #     print_array(a)
-    #     a = np.asarray(a, dtype=int)
-    #     # a = a / 255
-    #     plt.imshow(a)
-    #     plt.show()
     return rgb_components_array
 
 
@@ -369,16 +367,37 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     m_cols = int(image_info.width / M)
     m_rows = int(image_info.height / N)
 
-    rows = []
-    for i in range(0, len(rgb_components_array)):
-        for j in range(0, len(rgb_components_array[i])):
-            for k in range(0, len(rgb_components_array[i][j])):
-                print(int(rgb_components_array[i][j][k][0]), end=" ")
-            print("")
-        print("")
-        print("")
-        print("")
+    blocks_from_squares = []
+    for i in range(0, len(rgb_components_array) // 4):
+        first = rgb_components_array.pop(0)
+        second = rgb_components_array.pop(0)
+        third = rgb_components_array.pop(0)
+        fourth = rgb_components_array.pop(0)
 
+        first_second_conc = append_right(first, second)
+        third_fourth_conc = append_right(third, fourth)
+        four_conc = append_down(first_second_conc, third_fourth_conc)
+
+        blocks_from_squares.append(four_conc)
+        # f = np.asarray(four_conc, dtype=int)
+        # imshow(f)
+        # plt.show()
+
+    m_rows = len(blocks_from_squares) // (N // 4)
+    m_cols = len(blocks_from_squares) // (M // 4)
+    rgb_components_array = blocks_from_squares
+
+
+    # for i in range(0, len(rgb_components_array)):
+    #     for j in range(0, len(rgb_components_array[i])):
+    #         for k in range(0, len(rgb_components_array[i][j])):
+    #             print(int(rgb_components_array[i][j][k][0]), end=" ")
+    #         print("")
+    #     print("")
+    #     print("")
+    #     print("")
+
+    rows = []
     for i in range(0, m_rows):
         #filling one row of matrixes
         one_row = []
@@ -389,9 +408,9 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
             first = one_row.pop(0)
             second = one_row.pop(0)
             first_second_conc = append_right(first, second)
-            f = np.asarray(first_second_conc, dtype=int)
-            imshow(f)
-            plt.show()
+            # f = np.asarray(first_second_conc, dtype=int)
+            # imshow(f)
+            # plt.show()
 
 
             new_arr = []
