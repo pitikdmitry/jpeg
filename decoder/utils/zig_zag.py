@@ -10,12 +10,11 @@ class ZigZag:
         self._N = 8
         self._M = 8
         self._arr = create_zeros_list(self._N, self._M)
-        self._size = 0
         self._max_size = self._M * self._N
 
     @property
     def size(self) -> int:
-        return self._size
+        return self._counter
 
     @property
     def max_size(self) -> int:
@@ -24,6 +23,9 @@ class ZigZag:
     @property
     def data(self) -> []:
         return self._arr
+
+    def check_size(self, amount_to_add: int = 0) -> int:
+        return self.max_size - (self._counter + amount_to_add)
 
     def zig_zag_order(self, arr):
         N, M = self._N, self._M
@@ -69,7 +71,7 @@ class ZigZag:
 
     def put_in_zig_zag(self, element):
         N, M = self._N, self._M
-        if self._size + 1 > self._max_size:
+        if self._counter + 1 > self._max_size:
             return -1
 
         if self._counter == 0:
@@ -115,8 +117,7 @@ class ZigZag:
                     self._arr[self._i][self._j] = element
                     self._counter += 1
 
-        self._size += 1
-        return self._size
+        return self._counter
 
 
 if __name__ == "__main__":

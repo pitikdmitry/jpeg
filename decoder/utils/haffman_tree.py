@@ -1,4 +1,4 @@
-from decoder.exceptions.exceptions import HaffmanException
+from decoder.exceptions.exceptions import HaffmanException, BadDecodeException
 
 
 class Node:
@@ -147,25 +147,18 @@ class HaffmanTree:
             if c == "0" and current_node.left is not None:
                 current_node = current_node.left
             elif c == "0" and current_node.left is None:
-                if current_node.value == "node":
-                    return Node(0)
-                if current_node.value == "root":
-                    return Node(0, "root")
+                # index -= 1
                 arr_for_index[0] = index
                 return current_node
-            if c == "1" and current_node.right is not None:
+            elif c == "1" and current_node.right is not None:
                 current_node = current_node.right
             elif c == "1" and current_node.right is None:
-                if current_node.value == "node":
-                    return Node(0)
-                if current_node.value == "root":
-                    return Node(0, "root")
+                # index -= 1
                 arr_for_index[0] = index
                 return current_node
+            else:
+                raise BadDecodeException
             index += 1
-
-        arr_for_index[0] = index
-        return current_node
 
     def get_next_n_bits(self, code: str, arr_for_index: [], n: int):
         index = arr_for_index[0]

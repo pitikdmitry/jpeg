@@ -194,7 +194,7 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
         raise BadComponentsAmountException
     y_amount = 0
 
-    while y_amount < y_component.blocks_amount + 2:
+    while y_amount < y_component.blocks_amount:
         for i in range(0, koef_cb):
             parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
             y_amount += 1
@@ -249,6 +249,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             return
 
         amount_zeros = int(ac.value[0], 16)    #   added 16
+        # if zig_zag.check_size(amount_zeros) <= 0:
+        #     component.array_of_blocks.append(zig_zag.data)
+        #     return
         for i in range(0, amount_zeros):
             answer = zig_zag.put_in_zig_zag(0)
             if answer == -1:
@@ -256,19 +259,26 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
-            print("")
-            print("ARRAYFORINDEX", arr_for_index[0])
-            ac = ac_haff_tree.get_next_value(code, arr_for_index)
-            continue
-            # raise LengthToReadZeroException
+            # print("")
+            # print("ARRAYFORINDEX", arr_for_index[0])
+            # ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            # continue
+            raise LengthToReadZeroException
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
         else:
             ac_koef = int(ac_koef, 2)
+        # if zig_zag.check_size() <= 0:
+        #     component.array_of_blocks.append(zig_zag.data)
+        #     return
         answer = zig_zag.put_in_zig_zag(ac_koef)
         if answer == -1:
             raise FullZigZagException
+
+        if zig_zag.check_size() <= 0:
+            component.array_of_blocks.append(zig_zag.data)
+            return
         ac = ac_haff_tree.get_next_value(code, arr_for_index)
 
 
@@ -287,6 +297,7 @@ def i_dct(image_info: ImageInfo):
     for comp in image_info.components:
         for i, block in enumerate(comp.array_of_blocks):
             comp.array_of_blocks[i] = idct(block)
+    return
 
 
 def convert_ycbcr_to_rgb(y, cb, cr):
@@ -388,15 +399,16 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
 
 
 def print_array(arr):
-    for i in range(0, len(arr)):
-        for j in range(0, len(arr[i])):
-            print(int(arr[i][j][0]), end=" ")
-        print("")
-    print("")
-    print("")
+    pass
+    # for i in range(0, len(arr)):
+    #     for j in range(0, len(arr[i])):
+    #         print(int(arr[i][j][0]), end=" ")
+    #     print("")
+    # print("")
+    # print("")
 
 
-with open("23.jpg", "rb") as f:
+with open("skype.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
