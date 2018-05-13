@@ -303,7 +303,7 @@ def i_dct(image_info: ImageInfo):
     return
 
 
-def convert_ycbcr_to_rgb(y, cb, cr, part_number):
+def convert_ycbcr_to_rgb(y, cb, cr, part_number, K):
     h_offset = 0
     v_offset = 0
     if part_number == 1:
@@ -317,17 +317,18 @@ def convert_ycbcr_to_rgb(y, cb, cr, part_number):
     res = create_zeros_list(N, M)
     for i in range(0, N):
         for j in range(0, M):
-            R = y[i][j] + 1.402 * cr[i // 2 + v_offset][j // 2 + h_offset] + 128
+            R = y[i][j] + 1.402 * cr[i // 2 * K + v_offset][j // 2 * K + h_offset] + 128
             if R > 255:
                 R = float(255)
             if R < 0:
                 R = float(0)
-            G = y[i][j] - 0.34414 * cb[i // 2 + v_offset][j // 2 + h_offset] - 0.71414 * cr[i // 2 + v_offset][j // 2 + h_offset] + 128
+            G = y[i][j] - 0.34414 * cb[i // 2 * K + v_offset][j // 2 * K + h_offset] \
+                - 0.71414 * cr[i // 2 * K + v_offset][j // 2 * K + h_offset] + 128
             if G > 255:
                 G = float(255)
             if G < 0:
                 G = float(0)
-            B = y[i][j] + 1.772 * cb[i // 2 + v_offset][j // 2 + h_offset] + 128
+            B = y[i][j] + 1.772 * cb[i // 2 * K + v_offset][j // 2 * K + h_offset] + 128
             if B > 255:
                 B = float(255)
             if B < 0:
@@ -351,6 +352,26 @@ def merge_one_block(one_block_arr: []):
     return four_conc
 
 
+def convert_by_blocks(y_component: Component, cb_component: Component, cr_component: Component, rgb_components_array: [], K: int):
+    y_index = 0
+    cb_index = 0
+    cr_index = 0
+    while y_index < y_component.blocks_amount:
+        one_block_arr = []
+        for part_number in range(0, 4):
+            rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[y_index],
+                                                 cb_component.array_of_blocks[cb_index],
+                                                 cr_component.array_of_blocks[cr_index], part_number, K)
+            one_block_arr.append(rgb_component)
+            y_index += 1
+
+        one_block = merge_one_block(one_block_arr)
+        cb_index += 1
+        cr_index += 1
+
+        rgb_components_array.append(one_block)
+
+
 def y_cb_cr_to_rgb(image_info: ImageInfo):
     y_comp_index = 1
     cb_comp_index = 2
@@ -362,24 +383,14 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
 
     rgb_components_array = []
     koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
-    y_index = 0
-    cb_index = 0
-    cr_index = 0
-
-    while y_index < y_component.blocks_amount:
-        one_block_arr = []
-        for part_number in range(0, 4):
-            rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[y_index], cb_component.array_of_blocks[cb_index],
-                                             cr_component.array_of_blocks[cr_index], part_number)
-            one_block_arr.append(rgb_component)
-            y_index += 1
-
-        one_block = merge_one_block(one_block_arr)
-        cb_index += 1
-        cr_index += 1
-
-        rgb_components_array.append(one_block)
-
+    if koef_cb == 4:
+        convert_by_blocks(y_component, cb_component, cr_component, rgb_components_array, 1)
+    elif koef_cb == 1:
+        for i in range(0, y_component.blocks_amount):
+            convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[i],
+                                 cr_component.array_of_blocks[i], 0, 2)
+    else:
+        raise BadComponentsAmountException
     return rgb_components_array
 
 
