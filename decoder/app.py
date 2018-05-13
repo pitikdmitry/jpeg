@@ -3,16 +3,14 @@ import math
 import numpy as np
 from skimage.io import imshow
 from matplotlib import pyplot as plt
-import scipy.fftpack
-import binascii
 
 from decoder.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    BadMatrixParametersException, FullZigZagException, CodedDataParserException
+    BadMatrixParametersException, FullZigZagException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
-from decoder.utils.array_utils import create_zeros_list, append_right, append_right, multiply_2d_matrixes, append_down
+from decoder.utils.array_utils import create_zeros_list, append_right, multiply_2d_matrixes, append_down
 from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.quantization_table import QuantizationTable
@@ -401,36 +399,6 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     m_cols = math.floor(math.sqrt(len(rgb_components_array)))
     m_rows = m_cols
 
-    # blocks_from_squares = []
-    # for i in range(0, len(rgb_components_array) // 4):
-    #     first = rgb_components_array.pop(0)
-    #     second = rgb_components_array.pop(0)
-    #     third = rgb_components_array.pop(0)
-    #     fourth = rgb_components_array.pop(0)
-    #
-    #     first_second_conc = append_right(first, second)
-    #     third_fourth_conc = append_right(third, fourth)
-    #     four_conc = append_down(first_second_conc, third_fourth_conc)
-    #
-    #     blocks_from_squares.append(four_conc)
-    #     # f = np.asarray(four_conc, dtype=int)
-    #     # imshow(f)
-    #     # plt.show()
-    #
-    # m_rows = len(blocks_from_squares) // (N // 4)
-    # m_cols = len(blocks_from_squares) // (M // 4)
-    # rgb_components_array = blocks_from_squares
-
-
-    # for i in range(0, len(rgb_components_array)):
-    #     for j in range(0, len(rgb_components_array[i])):
-    #         for k in range(0, len(rgb_components_array[i][j])):
-    #             print(int(rgb_components_array[i][j][k][0]), end=" ")
-    #         print("")
-    #     print("")
-    #     print("")
-    #     print("")
-
     rows = []
     for i in range(0, m_rows):
         #filling one row of matrixes
@@ -442,10 +410,6 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
             first = one_row.pop(0)
             second = one_row.pop(0)
             first_second_conc = append_right(first, second)
-            # f = np.asarray(first_second_conc, dtype=int)
-            # imshow(f)
-            # plt.show()
-
 
             new_arr = []
             new_arr.append(first_second_conc)
@@ -472,16 +436,6 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     return result_matrix
 
 
-def print_array(arr):
-    pass
-    # for i in range(0, len(arr)):
-    #     for j in range(0, len(arr[i])):
-    #         print(int(arr[i][j][0]), end=" ")
-    #     print("")
-    # print("")
-    # print("")
-
-
 with open("skype.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
@@ -497,8 +451,5 @@ with open("skype.jpg", "rb") as f:
     i_dct(image_info)
     rgb_components_array = y_cb_cr_to_rgb(image_info)
     result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
-    # result_matrix = result_matrix / 255
     imshow(result_matrix)
     plt.show()
-
-# даюовить проверку что заполнили всю матрицу
