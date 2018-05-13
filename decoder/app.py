@@ -132,39 +132,20 @@ def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
         image_info.haffman_trees.append(haff_tree)
 
 
-def binstr_flip(binstr):
-    # check if binstr is a binary string
-    if not set(binstr).issubset('01'):
-        raise ValueError("binstr should have only '0's and '1's")
-    return ''.join(map(lambda c: '0' if c == '1' else '1', binstr))
-
-
-def uint_to_binstr(number, size):
+def int_to_binstr(number, size):
     return bin(number)[2:][-size:].zfill(size)
-
-
-def int_to_binstr(n):
-    if n == 0:
-        return ''
-
-    binstr = bin(abs(n))[2:]
-
-    # change every 0 to 1 and vice verse when n is negative
-    return binstr if n > 0 else binstr_flip(binstr)
 
 
 def read_next_bytes(coded_data_16: str) -> []:
     coded_data_binary = ""
-    num_of_bits = 8
     previous_ch = ""
     for ch in coded_data_16:
 
         if ch == '00' and previous_ch == "ff":
             continue
 
-        coded_data_binary += uint_to_binstr(int(ch, 16), 8)
+        coded_data_binary += int_to_binstr(int(ch, 16), 8)
         previous_ch = ch
-        # coded_data_binary += bin(int(ch, 16))[2:].zfill(num_of_bits)
 
     return coded_data_binary
 
@@ -180,7 +161,6 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
         raise BadComponentsAmountException
 
     # берем данные и переводим в двоичную строку(0111010...)
-    bytes_counter_arr_for_index = [0]
     coded_data = ffda_data[(header_length + 2):]
     coded_data_binary = read_next_bytes(coded_data)
 
@@ -275,9 +255,6 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             return
 
         amount_zeros = int(ac.value[0], 16)    #   added 16
-        # if zig_zag.check_size(amount_zeros) <= 0:
-        #     component.array_of_blocks.append(zig_zag.data)
-        #     return
         for i in range(0, amount_zeros):
             answer = zig_zag.put_in_zig_zag(0)
             if answer == -1:
@@ -285,19 +262,12 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
-            # print("")
-            # print("ARRAYFORINDEX", arr_for_index[0])
-            # ac = ac_haff_tree.get_next_value(code, arr_for_index)
-            # continue
             raise LengthToReadZeroException
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
         else:
             ac_koef = int(ac_koef, 2)
-        # if zig_zag.check_size() <= 0:
-        #     component.array_of_blocks.append(zig_zag.data)
-        #     return
         answer = zig_zag.put_in_zig_zag(ac_koef)
         if answer == -1:
             raise FullZigZagException
@@ -359,13 +329,15 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     rgb_components_array = []
-    koef_cb = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
-              (cb_component.horizontal_thinning ** 2 + cb_component.vertical_thinning ** 2)
-    koef_cr = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
-              (cr_component.horizontal_thinning ** 2 + cr_component.vertical_thinning ** 2)
+    # koef_cb = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
+    #           (cb_component.horizontal_thinning ** 2 + cb_component.vertical_thinning ** 2)
+    # koef_cr = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
+    #           (cr_component.horizontal_thinning ** 2 + cr_component.vertical_thinning ** 2)
+    koef_cb = 4
+    koef_cr = 4
     j = 0   # j counter for cb
     k = 0   # for cr
-    for i in range(0, len(y_component.array_of_blocks)):
+    for i in range(0, 16):
         cb_index = math.floor(i / koef_cb)
         cr_index = math.floor(i / koef_cr)
         rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i] , cb_component.array_of_blocks[cb_index],
@@ -374,12 +346,12 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
         j += 1
         k += 1
 
-    for a in rgb_components_array:
-        print_array(a)
-        a = np.asarray(a, dtype=int)
-        # a = a / 255
-        plt.imshow(a)
-        plt.show()
+    # for a in rgb_components_array:
+    #     print_array(a)
+    #     a = np.asarray(a, dtype=int)
+    #     # a = a / 255
+    #     plt.imshow(a)
+    #     plt.show()
     return rgb_components_array
 
 
@@ -400,15 +372,13 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
             one_row.append(first)
         while len(one_row) > 1:
             first = one_row.pop(0)
-            print_array(first)
-            print("")
             second = one_row.pop(0)
-            print_array(second)
-            print("")
             first_second_conc = append_right(first, second)
-            print_array(first_second_conc)
-            print("")
-            new_arr = [first_second_conc + one_row]
+            new_arr = []
+            new_arr.append(first_second_conc)
+            for mass in one_row:
+                new_arr.append(mass)
+
             one_row = new_arr
 
         rows.append(one_row[0])
@@ -418,7 +388,11 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
         first = result_matrix.pop(0)
         second = result_matrix.pop(0)
         first_second_conc = append_down(first, second)
-        result_matrix.append(first_second_conc + result_matrix)
+        new_arr = []
+        new_arr.append(first_second_conc)
+        for mass in result_matrix:
+            new_arr.append(mass)
+        result_matrix = new_arr
 
     result_matrix = np.asarray(result_matrix[0], dtype=int)
     return result_matrix
@@ -448,9 +422,9 @@ with open("skype.jpg", "rb") as f:
     quantization(image_info)
     i_dct(image_info)
     rgb_components_array = y_cb_cr_to_rgb(image_info)
-    # result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
+    result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
     # result_matrix = result_matrix / 255
-    # imshow(result_matrix)
-    # plt.show()
+    imshow(result_matrix)
+    plt.show()
 
 # даюовить проверку что заполнили всю матрицу

@@ -51,10 +51,7 @@ def append_down(matrix1, matrix2):
     m_1_rows = len(matrix1)
     m_2_rows = len(matrix2)
 
-    if m_1_rows != m_2_rows:
-        raise ConcatenateException
-
-    for i in range(0, m_1_rows):
+    for i in range(0, m_2_rows):
         matrix1.append(matrix2[i])
 
     return matrix1
