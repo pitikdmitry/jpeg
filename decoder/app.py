@@ -5,10 +5,10 @@ import numpy as np
 from skimage.io import imshow
 from matplotlib import pyplot as plt
 
-from decoder.bytes_array import BytesArray
+from decoder.utils.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    BadMatrixParametersException, FullZigZagException
+    FullZigZagException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, multiply_2d_matrixes, append_down

@@ -1,5 +1,4 @@
 import binascii
-from typing import Optional
 
 
 class BytesArray(list):
@@ -17,8 +16,6 @@ class BytesArray(list):
             return -1
         if end == -1:
             end = len(self)
-        # str1 = bytes(str1, encoding="UTF-8")
-        # str2 = bytes(str2, encoding="UTF-8")
 
         for i in range(start, end):
             if i + 1 < len(self):
@@ -32,8 +29,6 @@ class BytesArray(list):
         return -1
 
     def find_all_pairs(self, str1: str, str2: str) -> []:
-        # str1 = bytes(str1, encoding="UTF-8")
-        # str2 = bytes(str2, encoding="UTF-8")
         result_arr = []
 
         for i in range(0, len(self)):
@@ -56,8 +51,6 @@ class BytesArray(list):
         start_index = -1
         end_index = -1
         start_found = False
-        # pair1 = bytes(pair1, encoding="UTF-8")
-        # pair2 = bytes(pair2, encoding="UTF-8")
 
         for i in range(start, end):
             if i + 1 < len(self):
