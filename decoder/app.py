@@ -135,9 +135,9 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ffda_data = bytes_array.read_from_one_pair_to_other("ffda", "ffd9")
     header_length = int(ffda_data[2] + ffda_data[3], 16)   #   в первых ьдвух байтах длина только для заголовочной части а не для всей секции
 
-    ffc4_header_data = ffda_data[SECTION_TITLE_SIZE: header_length]
-    ffc4_header_index = 0
-    amount_of_components = int(ffc4_header_data[ffc4_header_index + 2], 16)
+    ffda_header_data = ffda_data[SECTION_TITLE_SIZE: header_length]
+    ffda_header_index = 0
+    amount_of_components = int(ffda_header_data[ffda_header_index + 2], 16)
     if amount_of_components != 3:
         raise BadComponentsAmountException
 
@@ -150,31 +150,20 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     ch_2 = bin(ch_10)
     coded_data_binary = ch_2[2:]
 
-    components_index = ffc4_header_index + 3
+    components_index = ffda_header_index + 3
 
     for i in range(0, amount_of_components):
 
-        component_id = int(ffc4_header_data[components_index], 16)
-        dc_table_id = int(ffc4_header_data[components_index + 1][1])
-        ac_table_id = int(ffc4_header_data[components_index + 1][0])
+        component_id = int(ffda_header_data[components_index], 16)
+        dc_table_id = int(ffda_header_data[components_index + 1][1])
+        ac_table_id = int(ffda_header_data[components_index + 1][0])
 
         component = image_info.get_component_by_id(component_id)
         component.dc_haff_table_id = dc_table_id
         component.ac_haff_table_id = ac_table_id
 
         components_index += 2
-    # for i in range(0, component.blocks_amount):
-    #     parse_channel(coded_data_binary, component, image_info, arr_for_index)
-    #
-    # # для каждого канала вычитаем dcc коэффициенты предыдущего
-    # component.substract_dc()
-    # components_index += 2
-    #
-    # length_of_data = len(coded_data_binary)
-    # length_index = arr_for_index[0]
-    # if arr_for_index[0] != len(coded_data_binary) - 1: # 136 for favicon
-    #     # raise CodedDataParserException
-    #     pass
+
     parse_channels(image_info, coded_data_binary)
 
 
@@ -188,6 +177,9 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     arr_for_index = [0]
+    y_component.blocks_amount = 16
+    cb_component.blocks_amount = 4
+    cr_component.blocks_amount = 4
     koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
     koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
     if koef_cb != koef_cr:

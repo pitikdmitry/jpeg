@@ -32,6 +32,7 @@ class Component:
         self._blocks_amount = (self._image_width / self._N) * (self._horizontal_thinning ** 2) + \
                               (self._image_height / self._M) * (self.vertical_thinning ** 2)
         self._blocks_amount /= 4
+        # self._blocks_amount =
         if not self._is_int(self._blocks_amount):
             pass
             # raise BadThinningException
@@ -90,5 +91,9 @@ class Component:
     @property
     def blocks_amount(self) -> int:
         return self._blocks_amount
+
+    @blocks_amount.setter
+    def blocks_amount(self, b: int):
+        self._blocks_amount = b
 
 
