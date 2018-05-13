@@ -215,6 +215,9 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
         print("length_of_data: " + str(length_of_data) + " length_index: " + str(length_index))
         pass
 
+    for comp in image_info.components:
+        comp.substract_dc()
+
 
 def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_for_index: []):
     zig_zag = ZigZag()
