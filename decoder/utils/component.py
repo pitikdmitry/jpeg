@@ -29,10 +29,9 @@ class Component:
         if self._image_height % self._M != 0:
             raise BadThinningException
 
-        self._blocks_amount = (self._image_width / self._N) * (self._horizontal_thinning ** 2) + \
-                              (self._image_height / self._M) * (self.vertical_thinning ** 2)
-        self._blocks_amount /= 4
-        # self._blocks_amount =
+        self._blocks_amount = (self._image_width / self._N) / self._horizontal_thinning * \
+                              (self._image_height / self._M) / self.vertical_thinning
+
         if not self._is_int(self._blocks_amount):
             pass
             # raise BadThinningException

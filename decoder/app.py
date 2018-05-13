@@ -95,11 +95,18 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
 
     channel_data_size = 3
     channel_info_index = channels_amount_index + 1
+    max_horizontal_thinning = 0
+    max_vertical_thinning = 0
     for i in range(0, channels_amount):
         channel_data = ff_c0_data[channel_info_index: channel_info_index + channel_data_size]
         component_id = int(channel_data[0], 16)
         horizontal_thinning = int(channel_data[1][0], 16)
         vertical_thinning = int(channel_data[1][1], 16)
+        if component_id == 1:
+            max_horizontal_thinning = horizontal_thinning
+            max_vertical_thinning = vertical_thinning
+        horizontal_thinning = max_horizontal_thinning // horizontal_thinning
+        vertical_thinning = max_vertical_thinning // vertical_thinning
         quantization_table_id = int(channel_data[2], 16)
         image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height))
 
@@ -191,9 +198,6 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     arr_for_index = [0]
-    y_component.blocks_amount = 16
-    cb_component.blocks_amount = 4
-    cr_component.blocks_amount = 4
     koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
     koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
     if koef_cb != koef_cr:
@@ -332,22 +336,22 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     rgb_components_array = []
-    # koef_cb = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
-    #           (cb_component.horizontal_thinning ** 2 + cb_component.vertical_thinning ** 2)
-    # koef_cr = (y_component.horizontal_thinning ** 2 + y_component.vertical_thinning ** 2) / \
-    #           (cr_component.horizontal_thinning ** 2 + cr_component.vertical_thinning ** 2)
-    koef_cb = 4
-    koef_cr = 4
+    koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
+    koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
     j = 0   # j counter for cb
     k = 0   # for cr
-    for i in range(0, 16):
+    i = 0
+    while i < len(y_component.array_of_blocks):
         cb_index = math.floor(i / koef_cb)
         cr_index = math.floor(i / koef_cr)
-        rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i] , cb_component.array_of_blocks[cb_index],
+
+        rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[cb_index],
                                              cr_component.array_of_blocks[cr_index])
         rgb_components_array.append(rgb_component)
         j += 1
         k += 1
+        i += 1
+
 
     # for a in rgb_components_array:
     #     print_array(a)
@@ -366,6 +370,14 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     m_rows = int(image_info.height / N)
 
     rows = []
+    for i in range(0, len(rgb_components_array)):
+        for j in range(0, len(rgb_components_array[i])):
+            for k in range(0, len(rgb_components_array[i][j])):
+                print(int(rgb_components_array[i][j][k][0]), end=" ")
+            print("")
+        print("")
+        print("")
+        print("")
 
     for i in range(0, m_rows):
         #filling one row of matrixes
@@ -377,6 +389,11 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
             first = one_row.pop(0)
             second = one_row.pop(0)
             first_second_conc = append_right(first, second)
+            f = np.asarray(first_second_conc, dtype=int)
+            imshow(f)
+            plt.show()
+
+
             new_arr = []
             new_arr.append(first_second_conc)
             for mass in one_row:
@@ -391,6 +408,7 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
         first = result_matrix.pop(0)
         second = result_matrix.pop(0)
         first_second_conc = append_down(first, second)
+
         new_arr = []
         new_arr.append(first_second_conc)
         for mass in result_matrix:
