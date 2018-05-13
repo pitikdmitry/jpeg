@@ -23,11 +23,11 @@ class Component:
         self.count_blocks()
 
     def count_blocks(self):
-        if self._image_width % self._N != 0:
-            raise BadThinningException
-            # self._y_channels_amount += 1
-        if self._image_height % self._M != 0:
-            raise BadThinningException
+        # if self._image_width % self._N != 0:
+        #     raise BadThinningException
+        #     # self._y_channels_amount += 1
+        # if self._image_height % self._M != 0:
+        #     raise BadThinningException
 
         self._blocks_amount = (self._image_width / self._N) / self._horizontal_thinning * \
                               (self._image_height / self._M) / self.vertical_thinning

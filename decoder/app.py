@@ -1,4 +1,5 @@
 import math
+import os
 
 import numpy as np
 from skimage.io import imshow
@@ -267,7 +268,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
-            raise LengthToReadZeroException
+            # raise LengthToReadZeroException
+            ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            continue
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
             ac_koef = int(ac_koef, 2) - 2 ** length_of_koef + 1
@@ -385,16 +388,18 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
         convert_by_blocks(y_component, cb_component, cr_component, rgb_components_array, 1)
     elif koef_cb == 1:
         for i in range(0, y_component.blocks_amount):
-            convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[i],
+            rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[i],
                                  cr_component.array_of_blocks[i], 0, 2)
+
+            rgb_components_array.append(rgb_component)
     else:
         raise BadComponentsAmountException
     return rgb_components_array
 
 
 def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
-    if image_info.width % M != 0 or image_info.height % N != 0:
-        raise BadMatrixParametersException
+    # if image_info.width % M != 0 or image_info.height % N != 0:
+    #     raise BadMatrixParametersException
 
     m_cols = math.floor(math.sqrt(len(rgb_components_array)))
     m_rows = m_cols
@@ -436,7 +441,8 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     return result_matrix
 
 
-with open("skype.jpg", "rb") as f:
+cur_path = os.path.dirname(__file__)
+with open(cur_path + "/images/cat.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
