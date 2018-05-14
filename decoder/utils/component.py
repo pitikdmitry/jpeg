@@ -9,6 +9,7 @@ class Component:
         self._component_id = component_id
         self._horizontal_thinning = horizontal_thinning
         self._vertical_thinning = vertical_thinning
+        self._thinning = horizontal_thinning * vertical_thinning
         self._quantization_table_id = quantization_table_id
         self._image_width = image_width
         self._image_height = image_height
@@ -71,6 +72,10 @@ class Component:
     @property
     def vertical_thinning(self) -> int:
         return self._vertical_thinning
+
+    @property
+    def thinning(self) -> int:
+        return self._thinning
 
     @property
     def dc_haff_table_id(self) -> int:

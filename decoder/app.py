@@ -198,19 +198,23 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     arr_for_index = [0]
-    koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
-    koef_cr = int(y_component.blocks_amount / cr_component.blocks_amount)
-    if koef_cb != koef_cr:
-        raise BadComponentsAmountException
-    y_amount = 0
-
-    while y_amount < y_component.blocks_amount:
-        for i in range(0, koef_cb):
+    y_amount, cb_amount, cr_amount = 0, 0, 0
+    while y_amount < y_component.blocks_amount and\
+            cb_amount < cb_component.blocks_amount and cr_amount < cr_component.blocks_amount:
+        for i in range(0, y_component.thinning):
+            if y_amount >= y_component.blocks_amount:
+                break
             parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
             y_amount += 1
 
-        parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
-        parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
+        for j in range(0, cb_component.thinning):
+            if cb_amount >= cb_component.blocks_amount:
+                break
+            parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
+        for k in range(0, cr_component.thinning):
+            if cr_amount >= cr_component.blocks_amount:
+                break
+            parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
 
     length_of_data = len(coded_data_binary)
     length_index = arr_for_index[0]
@@ -269,7 +273,6 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
-            # raise LengthToReadZeroException
             ac = ac_haff_tree.get_next_value(code, arr_for_index)
             continue
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)

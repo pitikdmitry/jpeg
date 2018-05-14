@@ -20,6 +20,9 @@ class ImageInfo:
         self._width_remainder = 0
         self._height_remainder = 0
 
+        self._koef_cb = 0
+        self._koef_cr = 0
+
     @property
     def comment(self) -> str:
         return self._comment
@@ -97,3 +100,11 @@ class ImageInfo:
     @property
     def cr_channels_amount(self) -> int:
         return self._cr_blocks_amount
+
+    @property
+    def koef_cb(self) -> int:
+        return self._koef_cb
+
+    @property
+    def koef_cr(self) -> int:
+        return self._koef_cr
