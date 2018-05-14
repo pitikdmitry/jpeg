@@ -383,6 +383,7 @@ def convert_by_blocks(y_component: Component, cb_component: Component, cr_compon
 
         rgb_components_array.append(one_block)
 
+
 def y_cb_cr_to_rgb(image_info: ImageInfo):
     y_comp_index = 1
     cb_comp_index = 2
@@ -451,7 +452,7 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
 
 
 cur_path = os.path.dirname(__file__)
-with open(cur_path + "/images/256x256.jpg", "rb") as f:
+with open(cur_path + "/images/376x245.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
