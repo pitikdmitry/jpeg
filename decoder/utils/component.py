@@ -5,11 +5,11 @@ from decoder.exceptions.exceptions import BadThinningException
 
 class Component:
     def __init__(self, component_id: int, horizontal_thinning: int, vertical_thinning: int, quantization_table_id: int,
-                 image_width: int, image_height: int):
+                 image_width: int, image_height: int, k_ratio: int):
         self._component_id = component_id
         self._horizontal_thinning = horizontal_thinning
         self._vertical_thinning = vertical_thinning
-        self._thinning = horizontal_thinning * vertical_thinning
+        self._k_ratio = k_ratio
         self._quantization_table_id = quantization_table_id
         self._image_width = image_width
         self._image_height = image_height
@@ -35,8 +35,8 @@ class Component:
         # if self._image_height % self._M != 0:
         #     raise BadThinningException
 
-        self._blocks_amount = math.ceil(self._image_width / self._N) / self._horizontal_thinning * \
-                              math.ceil(self._image_height / self._M) / self.vertical_thinning
+        self._blocks_amount = math.ceil(self._image_width / self._N / self._horizontal_thinning) * \
+                              math.ceil(self._image_height / self._M / self.vertical_thinning)
 
         if not self._is_int(self._blocks_amount):
             # pass
@@ -74,8 +74,8 @@ class Component:
         return self._vertical_thinning
 
     @property
-    def thinning(self) -> int:
-        return self._thinning
+    def k_ratio(self) -> int:
+        return self._k_ratio
 
     @property
     def dc_haff_table_id(self) -> int:

@@ -104,13 +104,15 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
         component_id = int(channel_data[0], 16)
         horizontal_thinning = int(channel_data[1][0], 16)
         vertical_thinning = int(channel_data[1][1], 16)
+        k_ratio = 1
         if component_id == 1:
+            k_ratio = horizontal_thinning * vertical_thinning
             max_horizontal_thinning = horizontal_thinning
             max_vertical_thinning = vertical_thinning
         horizontal_thinning = max_horizontal_thinning // horizontal_thinning
         vertical_thinning = max_vertical_thinning // vertical_thinning
         quantization_table_id = int(channel_data[2], 16)
-        image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height))
+        image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height, k_ratio))
 
         channel_info_index += 3
     return
@@ -201,17 +203,17 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
     y_amount, cb_amount, cr_amount = 0, 0, 0
     while y_amount < y_component.blocks_amount and\
             cb_amount < cb_component.blocks_amount and cr_amount < cr_component.blocks_amount:
-        for i in range(0, y_component.thinning):
+        for i in range(0, y_component.k_ratio):
             if y_amount >= y_component.blocks_amount:
                 break
             parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
             y_amount += 1
 
-        for j in range(0, cb_component.thinning):
+        for j in range(0, cb_component.k_ratio):
             if cb_amount >= cb_component.blocks_amount:
                 break
             parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
-        for k in range(0, cr_component.thinning):
+        for k in range(0, cr_component.k_ratio):
             if cr_amount >= cr_component.blocks_amount:
                 break
             parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
@@ -365,7 +367,7 @@ def convert_by_blocks(y_component: Component, cb_component: Component, cr_compon
             cb_index < cb_component.blocks_amount and cr_index < cr_component.blocks_amount:
         one_block_arr = []
 
-        for part_number in range(0, y_component.thinning):
+        for part_number in range(0, y_component.k_ratio):
             if y_index >= y_component.blocks_amount:
                 break
 
@@ -381,7 +383,6 @@ def convert_by_blocks(y_component: Component, cb_component: Component, cr_compon
 
         rgb_components_array.append(one_block)
 
-
 def y_cb_cr_to_rgb(image_info: ImageInfo):
     y_comp_index = 1
     cb_comp_index = 2
@@ -392,9 +393,9 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     rgb_components_array = []
-    if y_component.thinning == 4 and cb_component.thinning == 1 and cr_component.thinning == 1:
+    if y_component.k_ratio == 4 and cb_component.k_ratio == 1 and cr_component.k_ratio == 1:
         convert_by_blocks(y_component, cb_component, cr_component, rgb_components_array, 1)
-    elif y_component.thinning == 1 and cb_component.thinning == 1 and cr_component.thinning == 1:
+    elif y_component.k_ratio == 1 and cb_component.k_ratio == 1 and cr_component.k_ratio == 1:
         for i in range(0, y_component.blocks_amount):
             rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[i],
                                  cr_component.array_of_blocks[i], 0, 2)
@@ -450,7 +451,7 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
 
 
 cur_path = os.path.dirname(__file__)
-with open(cur_path + "/images/cat.jpg", "rb") as f:
+with open(cur_path + "/images/256x256.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
