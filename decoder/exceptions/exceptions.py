@@ -52,3 +52,7 @@ class FullZigZagException(BaseException):
 
 class CodedDataParserException(BaseException):
     pass
+
+
+class NotBaseMethodOfCodingException(BaseException):
+    pass

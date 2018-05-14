@@ -22,6 +22,11 @@ class Component:
         self._M = 8
         self.count_blocks()
 
+        if horizontal_thinning != 1 and horizontal_thinning != 2:
+            raise BadThinningException
+        if vertical_thinning != 1 and vertical_thinning != 2:
+            raise BadThinningException
+
     def count_blocks(self):
         # if self._image_width % self._N != 0:
         #     raise BadThinningException
@@ -29,12 +34,12 @@ class Component:
         # if self._image_height % self._M != 0:
         #     raise BadThinningException
 
-        self._blocks_amount = (self._image_width / self._N) / self._horizontal_thinning * \
-                              (self._image_height / self._M) / self.vertical_thinning
+        self._blocks_amount = math.ceil(self._image_width / self._N) / self._horizontal_thinning * \
+                              math.ceil(self._image_height / self._M) / self.vertical_thinning
 
         if not self._is_int(self._blocks_amount):
-            pass
-            # raise BadThinningException
+            # pass
+            raise BadThinningException
         self._blocks_amount = math.floor(self._blocks_amount)
 
     def _is_int(self, n):

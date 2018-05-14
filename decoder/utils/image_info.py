@@ -15,6 +15,11 @@ class ImageInfo:
         self._cb_blocks_amount = 0
         self._cr_blocks_amount = 0
 
+        self._N = 8
+        self._M = 8
+        self._width_remainder = 0
+        self._height_remainder = 0
+
     @property
     def comment(self) -> str:
         return self._comment
@@ -29,6 +34,9 @@ class ImageInfo:
 
     @height.setter
     def height(self, height: int):
+        self._height_remainder = height % self._N
+        if  self._height_remainder != 0:
+            height = height - self._height_remainder + self._N
         self._height = height
 
     @property
@@ -37,6 +45,9 @@ class ImageInfo:
 
     @width.setter
     def width(self, width: int):
+        self._width_remainder = width % self._N
+        if  self._width_remainder != 0:
+            width = width - self._width_remainder + self._N
         self._width = width
 
     @property

@@ -4,6 +4,7 @@ import binascii
 class BytesArray(list):
 
     def __init__(self, img_bytes):
+        super(BytesArray, self).__init__()
         img_hex = binascii.hexlify(img_bytes)
         n = 2
         for i in range(0, len(img_hex), n):

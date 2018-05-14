@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from decoder.utils.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    FullZigZagException
+    FullZigZagException, NotBaseMethodOfCodingException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, multiply_2d_matrixes, append_down
@@ -64,12 +64,15 @@ def parse_ffdb(bytes_array: BytesArray, image_info: ImageInfo):     #   табл
 
         quantization_table_index = ff_db_data_index + 3
         quantization_arr = ff_db_data[quantization_table_index:]
+
         quantization_table = zig_zag.zig_zag_order(quantization_arr)
         image_info.add_quantization_table(QuantizationTable(quantization_table_id, quantization_table))
 
 
 def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информация о картинке(р - ры)
     ff_c0_index = bytes_array.find_pair("ff", "c0")
+    if ff_c0_index == -1:
+        raise NotBaseMethodOfCodingException
 
     header_index = ff_c0_index + SECTION_TITLE_SIZE
     ff_db_size = int(bytes_array[header_index] + bytes_array[header_index + 1], 16)
@@ -142,7 +145,7 @@ def int_to_binstr(number, size):
     return bin(number)[2:][-size:].zfill(size)
 
 
-def read_next_bytes(coded_data_16: str) -> []:
+def hex_to_binary(coded_data_16: str) -> []:
     coded_data_binary = ""
     previous_ch = ""
     for ch in coded_data_16:
@@ -152,7 +155,6 @@ def read_next_bytes(coded_data_16: str) -> []:
 
         coded_data_binary += int_to_binstr(int(ch, 16), 8)
         previous_ch = ch
-
     return coded_data_binary
 
 
@@ -165,10 +167,6 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
     amount_of_components = int(ffda_header_data[ffda_header_index + 2], 16)
     if amount_of_components != 3:
         raise BadComponentsAmountException
-
-    # берем данные и переводим в двоичную строку(0111010...)
-    coded_data = ffda_data[(header_length + 2):]
-    coded_data_binary = read_next_bytes(coded_data)
 
     components_index = ffda_header_index + 3
 
@@ -184,6 +182,9 @@ def parse_ffda(bytes_array: BytesArray, image_info: ImageInfo): # start of scan
 
         components_index += 2
 
+    # берем данные и переводим в двоичную строку(0111010...)
+    coded_data = ffda_data[(header_length + 2):]
+    coded_data_binary = hex_to_binary(coded_data)
     parse_channels(image_info, coded_data_binary)
 
 
