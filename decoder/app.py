@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 from skimage.io import imshow
+from scipy.fftpack import idct as idct_sc
 from matplotlib import pyplot as plt
 
 from decoder.utils.bytes_array import BytesArray
@@ -303,10 +304,16 @@ def quantization(image_info: ImageInfo):
             comp.array_of_blocks[i] = multiply_2d_matrixes(block, quantization_table.table)
 
 
+def idct_sci_py(coefficient):
+    coefficient = np.asarray(coefficient)
+    return idct_sc(idct_sc(coefficient.T, norm='ortho').T, norm='ortho')
+
+
 def i_dct(image_info: ImageInfo):
     for comp in image_info.components:
         for i, block in enumerate(comp.array_of_blocks):
-            comp.array_of_blocks[i] = idct(block)
+            # comp.array_of_blocks[i] = idct(block)
+            comp.array_of_blocks[i] = idct_sci_py(block)
     return
 
 
@@ -452,7 +459,7 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
 
 
 cur_path = os.path.dirname(__file__)
-with open(cur_path + "/images/376x245.jpg", "rb") as f:
+with open(cur_path + "/images/256x256.jpg", "rb") as f:
     img = f.read()
     bytes_array = BytesArray(img)
     image_info = ImageInfo()    #   для результата
