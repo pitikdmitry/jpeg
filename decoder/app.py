@@ -291,8 +291,8 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
 
 def quantization(image_info: ImageInfo):
-    if len(image_info.quantization_tables) != 2:
-        return
+    # if len(image_info.quantization_tables) != 2:
+    #     return
 
     for comp in image_info.components:
         quantization_table_id = comp.quantization_table_id
@@ -361,9 +361,14 @@ def convert_by_blocks(y_component: Component, cb_component: Component, cr_compon
     y_index = 0
     cb_index = 0
     cr_index = 0
-    while y_index < y_component.blocks_amount:
+    while y_index < y_component.blocks_amount and\
+            cb_index < cb_component.blocks_amount and cr_index < cr_component.blocks_amount:
         one_block_arr = []
-        for part_number in range(0, 4):
+
+        for part_number in range(0, y_component.thinning):
+            if y_index >= y_component.blocks_amount:
+                break
+
             rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[y_index],
                                                  cb_component.array_of_blocks[cb_index],
                                                  cr_component.array_of_blocks[cr_index], part_number, K)
@@ -387,10 +392,9 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
     cr_component = image_info.get_component_by_id(cr_comp_index)
 
     rgb_components_array = []
-    koef_cb = int(y_component.blocks_amount / cb_component.blocks_amount)
-    if koef_cb == 4:
+    if y_component.thinning == 4 and cb_component.thinning == 1 and cr_component.thinning == 1:
         convert_by_blocks(y_component, cb_component, cr_component, rgb_components_array, 1)
-    elif koef_cb == 1:
+    elif y_component.thinning == 1 and cb_component.thinning == 1 and cr_component.thinning == 1:
         for i in range(0, y_component.blocks_amount):
             rgb_component = convert_ycbcr_to_rgb(y_component.array_of_blocks[i], cb_component.array_of_blocks[i],
                                  cr_component.array_of_blocks[i], 0, 2)
