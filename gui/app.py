@@ -1,5 +1,9 @@
 import sys
 import os
+
+import numpy as np
+from skimage.io import imread
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
     QDesktopWidget
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
@@ -51,10 +55,12 @@ class Example(QMainWindow):
         self.show_image(image)
 
     def show_image(self, image):
-        pixmap = QImage(image.data, 64, 64, 3 * 64, QImage.Format_RGB888)
-
+        image = QtGui.QImage(image.data, image.shape[0], image.shape[1], QImage.Format_RGB888)
+        pix = QtGui.QPixmap(image)
         lbl = QLabel(self)
-        lbl.setPixmap(pixmap)
+        lbl.setPixmap(pix)
+        # obj = (QtGui.QPixmap.fromImage(pixmap))
+        # lbl.setPixmap(obj)
         self.setCentralWidget(lbl)
 
 

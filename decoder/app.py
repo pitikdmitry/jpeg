@@ -454,7 +454,7 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
             new_arr.append(mass)
         result_matrix = new_arr
 
-    result_matrix = np.asarray(result_matrix[0], dtype=int)
+    result_matrix = np.asarray(result_matrix[0], dtype=np.uint8)
     return result_matrix
 
 
@@ -481,7 +481,7 @@ def decode_image(file_name: str):
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/256x256.jpg", "rb") as f:
+    with open(cur_path + "/images/5.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата
