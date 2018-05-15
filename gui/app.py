@@ -1,7 +1,10 @@
 import sys
 import os
-from PyQt5.QtWidgets import QMainWindow, QTextEdit, QAction, QApplication, QToolTip, QFileDialog
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
+    QDesktopWidget
+from PyQt5.QtGui import QIcon, QFont, QPixmap
+
+from decoder.app import decode_image
 
 
 class Example(QMainWindow):
@@ -13,9 +16,9 @@ class Example(QMainWindow):
 
     def initUI(self):
         QToolTip.setFont(QFont('SansSerif', 10))
-        # textEdit = QTextEdit()
-        # self.setCentralWidget(textEdit)
+        # hbox = QHBoxLayout(self)
 
+        #   toolbar
         openFileAction = QAction(QIcon('upload-icon.png'), 'Upload image', self)
         openFileAction.setStatusTip('Uploading image')
         openFileAction.triggered.connect(self.showDialog)
@@ -23,20 +26,36 @@ class Example(QMainWindow):
         toolbar = self.addToolBar('Toolbar')
         toolbar.addAction(openFileAction)
 
+        #   all window
         self.setGeometry(800, 600, 1000, 1000)
         self.setWindowTitle('Jpeg reader')
-        self.setWindowIcon(QIcon('title_icon.png'))
+        self.setWindowIcon(QIcon('upload-icon.png'))
+
+        #
+        # self.show_image("upload-icon.png")
+
+        self.center_window()
         self.show()
+
+    def center_window(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def showDialog(self):
         current_dir = os.getcwd()
-        fname = QFileDialog.getOpenFileName(self, 'Open file', current_dir)[0]
+        file_name = QFileDialog.getOpenFileName(self, 'Open file', current_dir)[0]
 
-        f = open(fname, 'r')
+        image = decode_image(file_name)
+        self.show_image(image)
 
-        with f:
-            data = f.read()
-            self.textEdit.setText(data)
+    def show_image(self, image):
+        pixmap = QPixmap(image)
+
+        lbl = QLabel(self)
+        lbl.setPixmap(pixmap)
+        self.setCentralWidget(lbl)
 
 
 if __name__ == '__main__':
