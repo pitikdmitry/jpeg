@@ -1,8 +1,8 @@
 import sys
 import os
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
-    QDesktopWidget
+    QDesktopWidget, QGridLayout, QWidget
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
 
 from decoder.app import decode_image
@@ -12,12 +12,22 @@ class Example(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
+        self._current_dir = os.getcwd()
+        self._window_width = 1280
+        self._window_height = 1024
+        self._basic_offset = 500
+        self._layout = None
+        self._image_widget = None
         self.initUI()
 
     def initUI(self):
         QToolTip.setFont(QFont('SansSerif', 10))
         # hbox = QHBoxLayout(self)
+        centralWidget = QWidget(self)
+        self.setCentralWidget(centralWidget)
+        self._layout = QGridLayout(self)
+        centralWidget.setLayout(self._layout)
+        # centralWidget.setLayout(gridLayout)
 
         #   toolbar
         openFileAction = QAction(QIcon('upload-icon.png'), 'Upload image', self)
@@ -27,10 +37,15 @@ class Example(QMainWindow):
         toolbar = self.addToolBar('Toolbar')
         toolbar.addAction(openFileAction)
 
+        closeFileAction = QAction(QIcon('cross.png'), 'Close file', self)
+        closeFileAction.setStatusTip('Closing file')
+        closeFileAction.triggered.connect(self.close_image)
+
+        toolbar.addAction(closeFileAction)
         #   all window
-        self.setGeometry(800, 600, 1000, 1000)
+        self.setGeometry(self._basic_offset, self._basic_offset, self._window_width, self._window_height)
         self.setWindowTitle('Jpeg reader')
-        self.setWindowIcon(QIcon('upload-icon.png'))
+        self.setWindowIcon(QIcon(self._current_dir + '/title_icon.svg'))
 
         #
         self.center_window()
@@ -42,9 +57,12 @@ class Example(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+    def close_image(self):
+        self._layout.itemAt(0).widget().setParent(None)
+        self.show()
+
     def showDialog(self):
-        current_dir = os.getcwd()
-        file_name = QFileDialog.getOpenFileName(self, 'Open file', current_dir)[0]
+        file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir)[0]
 
         image = decode_image(file_name)
         self.show_image(image)
@@ -52,12 +70,11 @@ class Example(QMainWindow):
     def show_image(self, image):
         image_qt = QtGui.QImage(image.data, image.shape[0], image.shape[1], QImage.Format_RGB888)
         pix = QtGui.QPixmap(image_qt)
-        lbl = QLabel(self)
-        lbl.setPixmap(pix)
-        self.setCentralWidget(lbl)
-        if image.
-        self.setGeometry(800, 600, image.shape[0], image.shape[1])
-        self.show()
+        self._image_widget = QLabel(self)
+        self._image_widget.setPixmap(pix)
+        self._image_widget.setAlignment(QtCore.Qt.AlignCenter)
+        self._layout.addWidget(self._image_widget, 0, 0)
+
 
 if __name__ == '__main__':
 
