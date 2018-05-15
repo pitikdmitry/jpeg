@@ -37,9 +37,9 @@ class ImageInfo:
 
     @height.setter
     def height(self, height: int):
-        self._height_remainder = height % self._N
-        if  self._height_remainder != 0:
-            height = height - self._height_remainder + self._N
+        # self._height_remainder = height % self._N
+        # if  self._height_remainder != 0:
+        #     height = height - self._height_remainder + self._N
         self._height = height
 
     @property
@@ -48,9 +48,9 @@ class ImageInfo:
 
     @width.setter
     def width(self, width: int):
-        self._width_remainder = width % self._N
-        if  self._width_remainder != 0:
-            width = width - self._width_remainder + self._N
+        # self._width_remainder = width % self._N
+        # if  self._width_remainder != 0:
+        #     width = width - self._width_remainder + self._N
         self._width = width
 
     @property

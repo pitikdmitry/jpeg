@@ -34,9 +34,15 @@ class Component:
         #     # self._y_channels_amount += 1
         # if self._image_height % self._M != 0:
         #     raise BadThinningException
+        hor_blocks_am = math.ceil(self._image_width / self._N)
+        if hor_blocks_am % 2 != 0:
+            hor_blocks_am += 1
 
-        self._blocks_amount = math.ceil(self._image_width / self._N / self._horizontal_thinning) * \
-                              math.ceil(self._image_height / self._M / self.vertical_thinning)
+        ver_blocks_am = math.ceil(self._image_height / self._M)
+        if ver_blocks_am % 2 != 0:
+            ver_blocks_am += 1
+
+        self._blocks_amount = math.floor((hor_blocks_am * ver_blocks_am) / (self._horizontal_thinning * self._vertical_thinning))
 
         if not self._is_int(self._blocks_amount):
             # pass
