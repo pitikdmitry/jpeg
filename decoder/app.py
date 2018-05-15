@@ -458,21 +458,42 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     return result_matrix
 
 
-cur_path = os.path.dirname(__file__)
-with open(cur_path + "/images/256x256.jpg", "rb") as f:
-    img = f.read()
-    bytes_array = BytesArray(img)
-    image_info = ImageInfo()    #   для результата
+def decode_image(file_name: str):
+    with open(file_name, "rb") as f:
+        img = f.read()
+        bytes_array = BytesArray(img)
+        image_info = ImageInfo()  # для результата
 
-    parse_ffd8(bytes_array)
-    parse_fffe(bytes_array, image_info)
-    parse_ffdb(bytes_array, image_info)
-    parse_ffc0(bytes_array, image_info)
-    parse_ffc4(bytes_array, image_info)
-    parse_ffda(bytes_array, image_info)
-    quantization(image_info)
-    i_dct(image_info)
-    rgb_components_array = y_cb_cr_to_rgb(image_info)
-    result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
-    imshow(result_matrix)
-    plt.show()
+        parse_ffd8(bytes_array)
+        parse_fffe(bytes_array, image_info)
+        parse_ffdb(bytes_array, image_info)
+        parse_ffc0(bytes_array, image_info)
+        parse_ffc4(bytes_array, image_info)
+        parse_ffda(bytes_array, image_info)
+        quantization(image_info)
+        i_dct(image_info)
+        rgb_components_array = y_cb_cr_to_rgb(image_info)
+        result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
+        imshow(result_matrix)
+        plt.show()
+
+
+if __name__ == "__main__":
+cur_path = os.path.dirname(__file__)
+    with open(cur_path + "/images/256x256.jpg", "rb") as f:
+        img = f.read()
+        bytes_array = BytesArray(img)
+        image_info = ImageInfo()    #   для результата
+
+        parse_ffd8(bytes_array)
+        parse_fffe(bytes_array, image_info)
+        parse_ffdb(bytes_array, image_info)
+        parse_ffc0(bytes_array, image_info)
+        parse_ffc4(bytes_array, image_info)
+        parse_ffda(bytes_array, image_info)
+        quantization(image_info)
+        i_dct(image_info)
+        rgb_components_array = y_cb_cr_to_rgb(image_info)
+        result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
+        imshow(result_matrix)
+        plt.show()
