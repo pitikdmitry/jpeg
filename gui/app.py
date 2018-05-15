@@ -1,8 +1,5 @@
 import sys
 import os
-
-import numpy as np
-from skimage.io import imread
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
     QDesktopWidget
@@ -36,8 +33,6 @@ class Example(QMainWindow):
         self.setWindowIcon(QIcon('upload-icon.png'))
 
         #
-        # self.show_image("upload-icon.png")
-
         self.center_window()
         self.show()
 
@@ -55,14 +50,14 @@ class Example(QMainWindow):
         self.show_image(image)
 
     def show_image(self, image):
-        image = QtGui.QImage(image.data, image.shape[0], image.shape[1], QImage.Format_RGB888)
-        pix = QtGui.QPixmap(image)
+        image_qt = QtGui.QImage(image.data, image.shape[0], image.shape[1], QImage.Format_RGB888)
+        pix = QtGui.QPixmap(image_qt)
         lbl = QLabel(self)
         lbl.setPixmap(pix)
-        # obj = (QtGui.QPixmap.fromImage(pixmap))
-        # lbl.setPixmap(obj)
         self.setCentralWidget(lbl)
-
+        if image.
+        self.setGeometry(800, 600, image.shape[0], image.shape[1])
+        self.show()
 
 if __name__ == '__main__':
 
