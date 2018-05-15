@@ -19,6 +19,8 @@ class Component:
         self._ac_haff_table_id = -1
 
         self._blocks_amount = 0
+        self._horizontal_blocks = 0
+        self._vertical_blocks = 0
         self._array_of_blocks = []
         self._N = 8
         self._M = 8
@@ -35,15 +37,17 @@ class Component:
         #     # self._y_channels_amount += 1
         # if self._image_height % self._M != 0:
         #     raise BadThinningException
-        hor_blocks_am = math.ceil(self._image_width / self._N)
-        if hor_blocks_am % 2 != 0:
-            hor_blocks_am += 1
+        self._horizontal_blocks = math.ceil(self._image_width / self._N)
+        if self._horizontal_blocks % 2 != 0:
+            self._horizontal_blocks += 1
+        self._horizontal_blocks = math.floor(self._horizontal_blocks / self._horizontal_thinning)
 
-        ver_blocks_am = math.ceil(self._image_height / self._M)
-        if ver_blocks_am % 2 != 0:
-            ver_blocks_am += 1
+        self._vertical_blocks = math.ceil(self._image_height / self._M)
+        if self._vertical_blocks % 2 != 0:
+            self._vertical_blocks += 1
+        self._vertical_blocks = math.floor(self._vertical_blocks / self._vertical_thinning)
 
-        self._blocks_amount = math.floor((hor_blocks_am * ver_blocks_am) / (self._horizontal_thinning * self._vertical_thinning))
+        self._blocks_amount = self._horizontal_blocks * self._vertical_blocks
 
         if not self._is_int(self._blocks_amount):
             # pass
@@ -117,4 +121,10 @@ class Component:
     def blocks_amount(self, b: int):
         self._blocks_amount = b
 
+    @property
+    def horizontal_blocks(self) -> int:
+        return self._horizontal_blocks
 
+    @property
+    def vertical_blocks(self) -> int:
+        return self._vertical_blocks

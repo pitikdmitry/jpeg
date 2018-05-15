@@ -427,9 +427,17 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
 def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     # if image_info.width % M != 0 or image_info.height % N != 0:
     #     raise BadMatrixParametersException
+    y_comp_index = 1
+    # cb_comp_index = 2
+    # cr_comp_index = 3
 
-    m_cols = math.floor(math.sqrt(len(rgb_components_array)))
-    m_rows = m_cols
+    y_component = image_info.get_component_by_id(y_comp_index)
+    # cb_component = image_info.get_component_by_id(cb_comp_index)
+    # cr_component = image_info.get_component_by_id(cr_comp_index)
+
+    # тут ПОПРАВИТЬ СРОЧНО!!!!
+    m_cols = int(y_component.horizontal_blocks / (y_component.k_ratio / 2))
+    m_rows = int(y_component.vertical_blocks / (y_component.k_ratio / 2))
 
     rows = []
     for i in range(0, m_rows):
@@ -491,7 +499,7 @@ def decode_image(file_name: str):
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/256x256.jpg", "rb") as f:
+    with open(cur_path + "/images/376x245.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата
