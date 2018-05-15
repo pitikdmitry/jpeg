@@ -23,25 +23,24 @@ class Example(QMainWindow):
     def initUI(self):
         QToolTip.setFont(QFont('SansSerif', 10))
         # hbox = QHBoxLayout(self)
-        centralWidget = QWidget(self)
-        self.setCentralWidget(centralWidget)
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
         self._layout = QGridLayout(self)
-        centralWidget.setLayout(self._layout)
-        # centralWidget.setLayout(gridLayout)
+        central_widget.setLayout(self._layout)
 
         #   toolbar
-        openFileAction = QAction(QIcon('upload-icon.png'), 'Upload image', self)
-        openFileAction.setStatusTip('Uploading image')
-        openFileAction.triggered.connect(self.showDialog)
+        open_file_action = QAction(QIcon('upload-icon.png'), 'Upload image', self)
+        open_file_action.setStatusTip('Uploading image')
+        open_file_action.triggered.connect(self.showDialog)
 
         toolbar = self.addToolBar('Toolbar')
-        toolbar.addAction(openFileAction)
+        toolbar.addAction(open_file_action)
 
-        closeFileAction = QAction(QIcon('cross.png'), 'Close file', self)
-        closeFileAction.setStatusTip('Closing file')
-        closeFileAction.triggered.connect(self.close_image)
+        close_file_action = QAction(QIcon('cross.png'), 'Close file', self)
+        close_file_action.setStatusTip('Closing file')
+        close_file_action.triggered.connect(self.close_image)
 
-        toolbar.addAction(closeFileAction)
+        toolbar.addAction(close_file_action)
         #   all window
         self.setGeometry(self._basic_offset, self._basic_offset, self._window_width, self._window_height)
         self.setWindowTitle('Jpeg reader')
