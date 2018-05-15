@@ -1,6 +1,7 @@
 import math
 
 from decoder.exceptions.exceptions import BadThinningException
+from decoder.utils.array_utils import create_zeros_list
 
 
 class Component:
@@ -57,7 +58,12 @@ class Component:
             return
 
         dc_koef_prev = self._array_of_blocks[0][0][0]
-        for i in range(1, self._blocks_amount):
+        # self._blocks_amount = len(self._array_of_blocks)
+        dis = self._blocks_amount - len(self._array_of_blocks)
+        for i in range(0, dis):
+            self._array_of_blocks.append(create_zeros_list(self._N, self._M))
+        for i in range(1, len(self._array_of_blocks)):
+            print(i)
             dc_koef_current = self._array_of_blocks[i][0][0]
             dc_koef_current = dc_koef_prev + dc_koef_current
             dc_koef_prev = dc_koef_current

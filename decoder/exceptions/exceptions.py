@@ -56,3 +56,7 @@ class CodedDataParserException(BaseException):
 
 class NotBaseMethodOfCodingException(BaseException):
     pass
+
+
+class EndException(BaseException):
+    pass

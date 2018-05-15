@@ -12,6 +12,8 @@ class ZigZag:
         self._arr = create_zeros_list(self._N, self._M)
         self._max_size = self._M * self._N
 
+        self._usual_array = []
+
     @property
     def size(self) -> int:
         return self._counter
@@ -70,6 +72,7 @@ class ZigZag:
         return result
 
     def put_in_zig_zag(self, element):
+        self._usual_array.append(element)
         N, M = self._N, self._M
         if self._counter + 1 > self._max_size:
             return -1

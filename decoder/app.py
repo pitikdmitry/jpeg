@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from decoder.utils.bytes_array import BytesArray
 from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException, BadDimensionException, \
     BadChannelsAmountException, BadQuantizationValuesLength, BadComponentsAmountException, LengthToReadZeroException, \
-    FullZigZagException, NotBaseMethodOfCodingException
+    FullZigZagException, NotBaseMethodOfCodingException, EndException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, multiply_2d_matrixes, append_down
@@ -202,22 +202,26 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
 
     arr_for_index = [0]
     y_amount, cb_amount, cr_amount = 0, 0, 0
-    while y_amount < y_component.blocks_amount and\
-            cb_amount < cb_component.blocks_amount and cr_amount < cr_component.blocks_amount:
-        for i in range(0, y_component.k_ratio):
-            if y_amount >= y_component.blocks_amount:
-                break
-            parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
-            y_amount += 1
+    try:
+        while y_amount < y_component.blocks_amount and\
+                cb_amount < cb_component.blocks_amount and cr_amount < cr_component.blocks_amount:
+            for i in range(0, y_component.k_ratio):
+                if y_amount >= y_component.blocks_amount:
+                    break
+                parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
+                y_amount += 1
 
-        for j in range(0, cb_component.k_ratio):
-            if cb_amount >= cb_component.blocks_amount:
-                break
-            parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
-        for k in range(0, cr_component.k_ratio):
-            if cr_amount >= cr_component.blocks_amount:
-                break
-            parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
+            for j in range(0, cb_component.k_ratio):
+                if cb_amount >= cb_component.blocks_amount:
+                    break
+                parse_channel(coded_data_binary, cb_component, image_info, arr_for_index)
+            for k in range(0, cr_component.k_ratio):
+                if cr_amount >= cr_component.blocks_amount:
+                    break
+                parse_channel(coded_data_binary, cr_component, image_info, arr_for_index)
+
+    except EndException:
+        pass
 
     length_of_data = len(coded_data_binary)
     length_index = arr_for_index[0]
@@ -262,8 +266,11 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
     while True:
-        if ac.value == "root" or ac.value == "node":
-            raise BadDecodeException
+        if 76290 <= arr_for_index[0] <= 76310:
+            print(1)
+            pass
+        if ac is None or ac.value == "root" or ac.value == "node":
+            raise EndException
         if ac.value == "00":
             component.array_of_blocks.append(zig_zag.data)
             return
@@ -276,6 +283,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         length_of_koef = int(ac.value[1], 16)   #   added 16
         if length_of_koef == 0:
+            answer = zig_zag.put_in_zig_zag(0)
+            if answer == -1:
+                raise FullZigZagException
             ac = ac_haff_tree.get_next_value(code, arr_for_index)
             continue
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
@@ -481,7 +491,7 @@ def decode_image(file_name: str):
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/36x50.jpg", "rb") as f:
+    with open(cur_path + "/images/256x256.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата
