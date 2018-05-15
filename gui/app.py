@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
     QDesktopWidget
-from PyQt5.QtGui import QIcon, QFont, QPixmap
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
 
 from decoder.app import decode_image
 
@@ -51,7 +51,7 @@ class Example(QMainWindow):
         self.show_image(image)
 
     def show_image(self, image):
-        pixmap = QPixmap(image)
+        pixmap = QImage(image.data, 64, 64, 3 * 64, QImage.Format_RGB888)
 
         lbl = QLabel(self)
         lbl.setPixmap(pixmap)
