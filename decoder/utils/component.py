@@ -32,11 +32,6 @@ class Component:
             raise BadThinningException
 
     def count_blocks(self):
-        # if self._image_width % self._N != 0:
-        #     raise BadThinningException
-        #     # self._y_channels_amount += 1
-        # if self._image_height % self._M != 0:
-        #     raise BadThinningException
         self._horizontal_blocks = math.ceil(self._image_width / self._N)
         if self._horizontal_blocks % 2 != 0:
             self._horizontal_blocks += 1
@@ -67,7 +62,6 @@ class Component:
         for i in range(0, dis):
             self._array_of_blocks.append(create_zeros_list(self._N, self._M))
         for i in range(1, len(self._array_of_blocks)):
-            print(i)
             dc_koef_current = self._array_of_blocks[i][0][0]
             dc_koef_current = dc_koef_prev + dc_koef_current
             dc_koef_prev = dc_koef_current

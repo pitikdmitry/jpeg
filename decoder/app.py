@@ -116,7 +116,7 @@ def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информ
         image_info.add_component(Component(component_id, horizontal_thinning, vertical_thinning, quantization_table_id, image_info.width, image_info.height, k_ratio))
 
         channel_info_index += 3
-    return
+    image_info.set_new_size()
 
 
 def parse_ffc4(bytes_array: BytesArray, image_info: ImageInfo): #   haffman
@@ -266,9 +266,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     #   reading ac
     ac = ac_haff_tree.get_next_value(code, arr_for_index)
     while True:
-        if 76290 <= arr_for_index[0] <= 76310:
-            print(1)
-            pass
+        # if 76290 <= arr_for_index[0] <= 76310:
+        #     print(1)
+        #     pass
         if ac is None or ac.value == "root" or ac.value == "node":
             raise EndException
         if ac.value == "00":
@@ -425,19 +425,17 @@ def y_cb_cr_to_rgb(image_info: ImageInfo):
 
 
 def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
-    # if image_info.width % M != 0 or image_info.height % N != 0:
-    #     raise BadMatrixParametersException
     y_comp_index = 1
-    # cb_comp_index = 2
-    # cr_comp_index = 3
 
     y_component = image_info.get_component_by_id(y_comp_index)
-    # cb_component = image_info.get_component_by_id(cb_comp_index)
-    # cr_component = image_info.get_component_by_id(cr_comp_index)
-
-    # тут ПОПРАВИТЬ СРОЧНО!!!!
-    m_cols = int(y_component.horizontal_blocks / (y_component.k_ratio / 2))
-    m_rows = int(y_component.vertical_blocks / (y_component.k_ratio / 2))
+    m_cols = 0
+    m_rows = 0
+    if y_component.k_ratio == 4:
+        m_cols = int(y_component.horizontal_blocks / (y_component.k_ratio / 2))
+        m_rows = int(y_component.vertical_blocks / (y_component.k_ratio / 2))
+    elif y_component.k_ratio == 1:
+        m_cols = int(y_component.horizontal_blocks)
+        m_rows = int(y_component.vertical_blocks)
 
     rows = []
     for i in range(0, m_rows):
@@ -476,6 +474,10 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
     return result_matrix
 
 
+def cut_image(matrix):
+    pass
+
+
 def decode_image(file_name: str):
     with open(file_name, "rb") as f:
         img = f.read()
@@ -492,14 +494,13 @@ def decode_image(file_name: str):
         i_dct(image_info)
         rgb_components_array = y_cb_cr_to_rgb(image_info)
         result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
-        # imshow(result_matrix)
-        # plt.show()
+        result_matrix = cut_image(result_matrix)
         return result_matrix
 
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/376x245.jpg", "rb") as f:
+    with open(cur_path + "/images/1024x1024.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата
@@ -514,5 +515,6 @@ if __name__ == "__main__":
         i_dct(image_info)
         rgb_components_array = y_cb_cr_to_rgb(image_info)
         result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
+        result_matrix = cut_image(result_matrix)
         imshow(result_matrix)
         plt.show()

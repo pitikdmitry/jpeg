@@ -67,7 +67,7 @@ class Example(QMainWindow):
         self.show_image(image)
 
     def show_image(self, image):
-        image_qt = QtGui.QImage(image.data, image.shape[0], image.shape[1], QImage.Format_RGB888)
+        image_qt = QtGui.QImage(image.data, image.shape[1], image.shape[0], QImage.Format_RGB888)
         pix = QtGui.QPixmap(image_qt)
         self._image_widget = QLabel(self)
         self._image_widget.setPixmap(pix)

@@ -23,6 +23,9 @@ class ImageInfo:
         self._koef_cb = 0
         self._koef_cr = 0
 
+        self._new_width = 0
+        self._new_height = 0
+
     @property
     def comment(self) -> str:
         return self._comment
@@ -64,6 +67,15 @@ class ImageInfo:
     @channels_amount.setter
     def channels_amount(self, channels_amount: int):
         self._channels_amount = channels_amount
+
+    def set_new_size(self):
+        y_comp_index = 1
+        y_component = self.get_component_by_id(y_comp_index)
+        horizontal_blocks = y_component.horizontal_blocks
+        vertical_blocks = y_component.vertical_blocks
+
+        self._new_width = horizontal_blocks * self._N
+        self._new_height = vertical_blocks * self._M
 
     def add_quantization_table(self, quantization_table: QuantizationTable):
         self._quantization_tables.append(quantization_table)
@@ -108,3 +120,11 @@ class ImageInfo:
     @property
     def koef_cr(self) -> int:
         return self._koef_cr
+
+    @property
+    def new_width(self) -> int:
+        return self._new_width
+
+    @property
+    def new_height(self) -> int:
+        return self._new_height
