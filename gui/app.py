@@ -76,7 +76,8 @@ class Example(QMainWindow):
         self.move(qr.topLeft())
 
     def close_image(self):
-        self._layout.itemAt(0).widget().setParent(None)
+        while self._layout.itemAt(0) is not None:
+            self._layout.itemAt(0).widget().setParent(None)
         self.show()
 
     def showDialog(self):
