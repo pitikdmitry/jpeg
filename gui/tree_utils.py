@@ -7,10 +7,7 @@ class TreeUtils:
 
     def save_tree(self, tree):
         graph = Dot(graph_type='graph')
-        # pre_order(tree.root)
-        # print("")
         self.pre_order_tree(tree.root, graph)
-        print("")
         type = ""
         if tree.ac_dc_class == 0:
             type = "dc_"
@@ -23,7 +20,6 @@ class TreeUtils:
     def pre_order_tree(self, node, graph):
         if node is None:
             return
-        print(node.value, end=" ")
         if node.left is not None:
             if node.value == "node":
                 node.value += str(self.counter)

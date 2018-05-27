@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileD
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage, QPainter
 
 from decoder.app import decode_image
-from draw_tree import TreeUtils
+from tree_utils import TreeUtils
 
 
 class Example(QMainWindow):
@@ -28,26 +28,10 @@ class Example(QMainWindow):
     def initUI(self):
         QToolTip.setFont(QFont('SansSerif', 10))
 
-        scroll_area = QScrollArea()
-
         self._main_widget = QWidget()
-        # Layout of Container Widget
-        self._layout = QGridLayout()
-        # self._layout = QVBoxLayout()
+        self._layout = QHBoxLayout()
         self._main_widget.setLayout(self._layout)
         self.setCentralWidget(self._main_widget)
-
-        # # Scroll Area Properties
-        # scroll = QScrollArea()
-        # # scroll.setVerticalScrollBarPolicy(ScrollBarAlwaysOn)
-        # # scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # scroll.setWidgetResizable(False)
-        # scroll.setWidget(widget)
-        #
-        # # Scroll Area Layer add
-        # vLayout = QVBoxLayout(self)
-        # vLayout.addWidget(scroll)
-        # self.setLayout(vLayout)
 
         #   toolbar
         open_file_action = QAction(QIcon('upload-icon.png'), 'Upload image', self)
@@ -83,6 +67,7 @@ class Example(QMainWindow):
         self.show()
 
     def showDialog(self):
+        self.close_image()
         file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir)[0]
 
         image, image_info = decode_image(file_name)
