@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileD
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage, QPainter
 
 from decoder.app import decode_image
+import numpy as np
 from tree_utils import TreeUtils
 
 
@@ -49,7 +50,6 @@ class Example(QMainWindow):
         #   all window
         self.setGeometry(self._basic_offset, self._basic_offset, self._window_width, self._window_height)
         self.setWindowTitle('Jpeg reader')
-        self.setWindowIcon(QIcon(self._current_dir + '/title_icon.svg'))
 
         #
         self.center_window()
@@ -72,7 +72,7 @@ class Example(QMainWindow):
 
         image, image_info = decode_image(file_name)
         self.show_image(image)
-        self.show_image_info(image_info)
+        self.show_quantization_tables(image_info)
         self.print_tree(image_info)
 
     def show_image(self, image):
@@ -81,46 +81,20 @@ class Example(QMainWindow):
         self._image_widget = QLabel(self)
         self._image_widget.setPixmap(pix)
         self._image_widget.setAlignment(QtCore.Qt.AlignCenter)
-        self._layout.addWidget(self._image_widget, self._grid_vertical_position, 0)
+        self._layout.addWidget(self._image_widget, self._grid_vertical_position)
         self._grid_vertical_position += 1
-
-    def show_image_info(self, image_info):
-        self.show_quantization_tables(image_info)
 
     def show_quantization_tables(self, image_info):
         tables = image_info.quantization_tables
         for i in range(0, len(tables)):
-            table_label = QLabel("Quantization table id = " + str(tables[i].id))
-            table_label.setAlignment(Qt.AlignCenter)
-            self._layout.addWidget(table_label, self._grid_vertical_position, 0)
-            self._grid_vertical_position += 1
-            q_table = self.array_2_table(tables[i].table)
-            self._layout.addWidget(q_table, self._grid_vertical_position, 0)
-            self._grid_vertical_position += 1
+            self.print_table_in_file(tables[i])
 
-    def array_2_table(self, array):
-        table = QTableWidget()
-
-        w = len(array)
-        h = len(array[0])
-        table.setColumnCount(w)
-        table.setRowCount(h)
-        for row in range(h):
-            for column in range(w):
-                table.setItem(row, column, QTableWidgetItem(str(array[row][column])))
-
-        self.set_table_width_height(table, w, h)
-        return table
-
-    def set_table_width_height(self, table, w, h):
-        column_width = 50
-        column_height = 20
-        table.verticalHeader().setDefaultSectionSize(column_height)
-        table.horizontalHeader().setDefaultSectionSize(column_width)
-        w_header = table.verticalHeader().sizeHint().width()
-        h_header = table.horizontalHeader().sizeHint().height()
-        table.setFixedWidth(w * column_width + 1.5 * w_header)
-        table.setFixedHeight(h * column_height + 1.3 * h_header)
+    def print_table_in_file(self, table):
+        table_id = table.id
+        file_name = self._current_dir + "/quantization_tables/table_" + str(table_id) + ".txt"
+        f = open(file_name, 'w')
+        np.savetxt(file_name, table.table, fmt='%1.3f', delimiter='\t')
+        f.close()
 
     def print_tree(self, image_info):
         haff_trees = image_info.haffman_trees
