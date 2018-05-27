@@ -1,50 +1,37 @@
-import sys
-from PyQt5.QtWidgets import (QMainWindow, QTextEdit,
-    QAction, QFileDialog, QApplication)
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QPainter
+from PyQt5.QtWidgets import QWidget, QApplication
 
 
-class Example(QMainWindow):
+class DrawCircles(QWidget):
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        # setGeometry(x_pos, y_pos, width, height)
+        self.setGeometry(300, 300, 350, 350)
+        self.setWindowTitle('Draw circles')
 
-    def __init__(self):
-        super().__init__()
-
-        self.initUI()
-
-
-    def initUI(self):
-
-        self.textEdit = QTextEdit()
-        self.setCentralWidget(self.textEdit)
-        self.statusBar()
-
-        openFile = QAction(QIcon('download.png'), 'Open', self)
-        openFile.setShortcut('Ctrl+O')
-        openFile.setStatusTip('Open new File')
-        openFile.triggered.connect(self.showDialog)
-
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(openFile)
-
-        self.setGeometry(300, 300, 350, 300)
-        self.setWindowTitle('File dialog')
-        self.show()
-
-
-    def showDialog(self):
-
-        fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')[0]
-
-        f = open(fname, 'r')
-
-        with f:
-            data = f.read()
-            self.textEdit.setText(data)
+    def paintEvent(self, event):
+        paint = QPainter()
+        paint.begin(self)
+        # optional
+        paint.setRenderHint(QPainter.Antialiasing)
+        # make a white drawing background
+        paint.setBrush(Qt.white)
+        paint.drawRect(event.rect())
+        # for circle make the ellipse radii match
+        radx = 100
+        rady = 100
+        # draw red circles
+        paint.setPen(Qt.red)
+        for k in range(125, 220, 10):
+            center = QPoint(k, k)
+            # optionally fill each circle yellow
+            paint.setBrush(Qt.yellow)
+            paint.drawEllipse(center, radx, rady)
+        paint.end()
 
 
-if __name__ == '__main__':
-
-    app = QApplication(sys.argv)
-    ex = Example()
-    sys.exit(app.exec_())
+app = QApplication([])
+circles = DrawCircles()
+circles.show()
+app.exec_()

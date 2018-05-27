@@ -12,6 +12,10 @@ class Node:
     def value(self):
         return self._value
 
+    @value.setter
+    def value(self, val: str) -> None:
+        self._value = val
+
     @property
     def level(self):
         return self._level

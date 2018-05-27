@@ -1,13 +1,14 @@
 import sys
 import os
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
     QDesktopWidget, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, \
     QAbstractScrollArea
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage, QPainter
 
 from decoder.app import decode_image
+from draw_tree import TreeUtils
 
 
 class Example(QMainWindow):
@@ -20,6 +21,7 @@ class Example(QMainWindow):
         self._basic_offset = 500
         self._layout = None
         self._image_widget = None
+        self._main_widget = None
         self._grid_vertical_position = 0
         self.initUI()
 
@@ -28,12 +30,12 @@ class Example(QMainWindow):
 
         scroll_area = QScrollArea()
 
-        widget = QWidget()
+        self._main_widget = QWidget()
         # Layout of Container Widget
         self._layout = QGridLayout()
         # self._layout = QVBoxLayout()
-        widget.setLayout(self._layout)
-        self.setCentralWidget(widget)
+        self._main_widget.setLayout(self._layout)
+        self.setCentralWidget(self._main_widget)
 
         # # Scroll Area Properties
         # scroll = QScrollArea()
@@ -86,6 +88,7 @@ class Example(QMainWindow):
         image, image_info = decode_image(file_name)
         self.show_image(image)
         self.show_image_info(image_info)
+        self.print_tree(image_info)
 
     def show_image(self, image):
         image_qt = QtGui.QImage(image.data, image.shape[1], image.shape[0], QImage.Format_RGB888)
@@ -134,9 +137,16 @@ class Example(QMainWindow):
         table.setFixedWidth(w * column_width + 1.5 * w_header)
         table.setFixedHeight(h * column_height + 1.3 * h_header)
 
+    def print_tree(self, image_info):
+        haff_trees = image_info.haffman_trees
+        for i in range(0, len(haff_trees)):
+            tree_utils = TreeUtils()
+            tree = haff_trees[i]
+            tree_utils.save_tree(tree)
+
 
 if __name__ == '__main__':
 
-    app = QApplication(sys.argv)
+    app = QApplication([])
     ex = Example()
-    sys.exit(app.exec_())
+    app.exec_()
