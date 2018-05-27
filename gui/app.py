@@ -3,7 +3,8 @@ import os
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
-    QDesktopWidget, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QTableWidget, QTableWidgetItem
+    QDesktopWidget, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, \
+    QAbstractScrollArea
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
 
 from decoder.app import decode_image
@@ -91,7 +92,7 @@ class Example(QMainWindow):
         self._image_widget = QLabel(self)
         self._image_widget.setPixmap(pix)
         self._image_widget.setAlignment(QtCore.Qt.AlignCenter)
-        self._layout.addWidget(self._image_widget, self._grid_vertical_position, 1)
+        self._layout.addWidget(self._image_widget, self._grid_vertical_position, 0)
         self._grid_vertical_position += 1
 
     def show_image_info(self, image_info):
@@ -100,11 +101,12 @@ class Example(QMainWindow):
     def show_quantization_tables(self, image_info):
         tables = image_info.quantization_tables
         for i in range(0, len(tables)):
-            table_label = QLabel("Quantization table " + str(i + 1))
+            table_label = QLabel("Quantization table id = " + str(tables[i].id))
             table_label.setAlignment(Qt.AlignCenter)
             self._layout.addWidget(table_label, self._grid_vertical_position, 0)
+            self._grid_vertical_position += 1
             q_table = self.array_2_table(tables[i].table)
-            self._layout.addWidget(q_table, self._grid_vertical_position, 1)
+            self._layout.addWidget(q_table, self._grid_vertical_position, 0)
             self._grid_vertical_position += 1
 
     def array_2_table(self, array):
@@ -117,7 +119,19 @@ class Example(QMainWindow):
         for row in range(h):
             for column in range(w):
                 table.setItem(row, column, QTableWidgetItem(str(array[row][column])))
+
+        self.set_table_width_height(table, w, h)
         return table
+
+    def set_table_width_height(self, table, w, h):
+        column_width = 50
+        column_height = 20
+        table.verticalHeader().setDefaultSectionSize(column_height)
+        table.horizontalHeader().setDefaultSectionSize(column_width)
+        w_header = table.verticalHeader().sizeHint().width()
+        h_header = table.horizontalHeader().sizeHint().height()
+        table.setFixedWidth(w * column_width + 1.5 * w_header)
+        table.setFixedHeight(h * column_height + 1.3 * h_header)
 
 
 if __name__ == '__main__':
