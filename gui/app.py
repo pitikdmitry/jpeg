@@ -1,8 +1,9 @@
 import sys
 import os
 from PyQt5 import QtGui, QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
-    QDesktopWidget, QGridLayout, QWidget
+    QDesktopWidget, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
 
 from decoder.app import decode_image
@@ -18,15 +19,32 @@ class Example(QMainWindow):
         self._basic_offset = 500
         self._layout = None
         self._image_widget = None
+        self._grid_vertical_position = 0
         self.initUI()
 
     def initUI(self):
         QToolTip.setFont(QFont('SansSerif', 10))
-        # hbox = QHBoxLayout(self)
-        central_widget = QWidget(self)
-        self.setCentralWidget(central_widget)
-        self._layout = QGridLayout(self)
-        central_widget.setLayout(self._layout)
+
+        scroll_area = QScrollArea()
+
+        widget = QWidget()
+        # Layout of Container Widget
+        self._layout = QGridLayout()
+        # self._layout = QVBoxLayout()
+        widget.setLayout(self._layout)
+        self.setCentralWidget(widget)
+
+        # # Scroll Area Properties
+        # scroll = QScrollArea()
+        # # scroll.setVerticalScrollBarPolicy(ScrollBarAlwaysOn)
+        # # scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # scroll.setWidgetResizable(False)
+        # scroll.setWidget(widget)
+        #
+        # # Scroll Area Layer add
+        # vLayout = QVBoxLayout(self)
+        # vLayout.addWidget(scroll)
+        # self.setLayout(vLayout)
 
         #   toolbar
         open_file_action = QAction(QIcon('upload-icon.png'), 'Upload image', self)
@@ -63,8 +81,9 @@ class Example(QMainWindow):
     def showDialog(self):
         file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir)[0]
 
-        image = decode_image(file_name)
+        image, image_info = decode_image(file_name)
         self.show_image(image)
+        self.show_image_info(image_info)
 
     def show_image(self, image):
         image_qt = QtGui.QImage(image.data, image.shape[1], image.shape[0], QImage.Format_RGB888)
@@ -72,7 +91,33 @@ class Example(QMainWindow):
         self._image_widget = QLabel(self)
         self._image_widget.setPixmap(pix)
         self._image_widget.setAlignment(QtCore.Qt.AlignCenter)
-        self._layout.addWidget(self._image_widget, 0, 0)
+        self._layout.addWidget(self._image_widget, self._grid_vertical_position, 1)
+        self._grid_vertical_position += 1
+
+    def show_image_info(self, image_info):
+        self.show_quantization_tables(image_info)
+
+    def show_quantization_tables(self, image_info):
+        tables = image_info.quantization_tables
+        for i in range(0, len(tables)):
+            table_label = QLabel("Quantization table " + str(i + 1))
+            table_label.setAlignment(Qt.AlignCenter)
+            self._layout.addWidget(table_label, self._grid_vertical_position, 0)
+            q_table = self.array_2_table(tables[i].table)
+            self._layout.addWidget(q_table, self._grid_vertical_position, 1)
+            self._grid_vertical_position += 1
+
+    def array_2_table(self, array):
+        table = QTableWidget()
+
+        w = len(array)
+        h = len(array[0])
+        table.setColumnCount(w)
+        table.setRowCount(h)
+        for row in range(h):
+            for column in range(w):
+                table.setItem(row, column, QTableWidgetItem(str(array[row][column])))
+        return table
 
 
 if __name__ == '__main__':

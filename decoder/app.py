@@ -475,10 +475,10 @@ def merge_rgb_blocks(rgb_components_array: [], image_info: ImageInfo):
 
 
 def cut_image(matrix):
-    pass
+    return matrix
 
 
-def decode_image(file_name: str):
+def decode_image(file_name: str) -> ():
     with open(file_name, "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
@@ -495,7 +495,7 @@ def decode_image(file_name: str):
         rgb_components_array = y_cb_cr_to_rgb(image_info)
         result_matrix = merge_rgb_blocks(rgb_components_array, image_info)
         result_matrix = cut_image(result_matrix)
-        return result_matrix
+        return result_matrix, image_info
 
 
 if __name__ == "__main__":
