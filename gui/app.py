@@ -1,15 +1,12 @@
-import sys
 import os
+import numpy as np
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QToolTip, QFileDialog, QHBoxLayout, QLabel, \
-    QDesktopWidget, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, \
-    QAbstractScrollArea
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage, QPainter
+    QDesktopWidget, QWidget
+from PyQt5.QtGui import QIcon, QFont, QImage
 
 from decoder.app import decode_image
-import numpy as np
-from tree_utils import TreeUtils
+from gui.tree_utils import TreeUtils
 
 
 class Example(QMainWindow):
@@ -35,23 +32,20 @@ class Example(QMainWindow):
         self.setCentralWidget(self._main_widget)
 
         #   toolbar
-        open_file_action = QAction(QIcon('upload-icon.png'), 'Upload image', self)
+        open_file_action = QAction(QIcon(self._current_dir + '/gui_images/upload-icon.png'), 'Upload image', self)
         open_file_action.setStatusTip('Uploading image')
-        open_file_action.triggered.connect(self.showDialog)
+        open_file_action.triggered.connect(self.show_dialog)
 
         toolbar = self.addToolBar('Toolbar')
         toolbar.addAction(open_file_action)
 
-        close_file_action = QAction(QIcon('cross.png'), 'Close file', self)
+        close_file_action = QAction(QIcon(self._current_dir + '/gui_images/cross.png'), 'Close file', self)
         close_file_action.setStatusTip('Closing file')
         close_file_action.triggered.connect(self.close_image)
 
         toolbar.addAction(close_file_action)
-        #   all window
         self.setGeometry(self._basic_offset, self._basic_offset, self._window_width, self._window_height)
         self.setWindowTitle('Jpeg reader')
-
-        #
         self.center_window()
         self.show()
 
@@ -66,14 +60,14 @@ class Example(QMainWindow):
             self._layout.itemAt(0).widget().setParent(None)
         self.show()
 
-    def showDialog(self):
+    def show_dialog(self):
         self.close_image()
         file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir)[0]
 
         image, image_info = decode_image(file_name)
         self.show_image(image)
         self.show_quantization_tables(image_info)
-        self.print_tree(image_info)
+        self.print_tree_in_file(image_info)
 
     def show_image(self, image):
         image_qt = QtGui.QImage(image.data, image.shape[1], image.shape[0], QImage.Format_RGB888)
@@ -96,7 +90,7 @@ class Example(QMainWindow):
         np.savetxt(file_name, table.table, fmt='%1.3f', delimiter='\t')
         f.close()
 
-    def print_tree(self, image_info):
+    def print_tree_in_file(self, image_info):
         haff_trees = image_info.haffman_trees
         for i in range(0, len(haff_trees)):
             tree_utils = TreeUtils()
