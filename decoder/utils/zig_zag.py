@@ -1,4 +1,4 @@
-from decoder.utils.array_utils import create_zeros_array, create_zeros_list
+from decoder.utils.array_utils import create_zeros_list
 
 
 class ZigZag:

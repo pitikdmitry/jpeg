@@ -62,7 +62,7 @@ class Example(QMainWindow):
 
     def show_dialog(self):
         self.close_image()
-        file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir)[0]
+        file_name = QFileDialog.getOpenFileName(self, 'Open file', self._current_dir + "/test_images/")[0]
 
         image, image_info = decode_image(file_name)
         self.show_image(image)

@@ -1,4 +1,3 @@
-import math
 import os
 
 import numpy as np
@@ -13,7 +12,6 @@ from decoder.exceptions.exceptions import BadMarkerException, BadDecodeException
 from decoder.utils.component import Component
 from decoder.utils.image_info import ImageInfo
 from decoder.utils.array_utils import create_zeros_list, append_right, multiply_2d_matrixes, append_down
-from decoder.utils.dct import idct
 from decoder.utils.haffman_tree import HaffmanTree
 from decoder.utils.quantization_table import QuantizationTable
 from decoder.utils.zig_zag import ZigZag
@@ -225,10 +223,8 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
 
     length_of_data = len(coded_data_binary)
     length_index = arr_for_index[0]
-    if arr_for_index[0] != len(coded_data_binary) - 1: # 136 for favicon
-        # raise CodedDataParserException
+    if arr_for_index[0] != len(coded_data_binary) - 1:
         print("length_of_data: " + str(length_of_data) + " length_index: " + str(length_index))
-        pass
 
     for comp in image_info.components:
         comp.substract_dc()
@@ -252,7 +248,7 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
     if dc.value != "00":
-        length_to_read = int(dc.value, 16)  #   changed to 16
+        length_to_read = int(dc.value, 16)
         if length_to_read == 0:
             raise LengthToReadZeroException
 
@@ -275,13 +271,13 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             component.array_of_blocks.append(zig_zag.data)
             return
 
-        amount_zeros = int(ac.value[0], 16)    #   added 16
+        amount_zeros = int(ac.value[0], 16)
         for i in range(0, amount_zeros):
             answer = zig_zag.put_in_zig_zag(0)
             if answer == -1:
                 raise FullZigZagException
 
-        length_of_koef = int(ac.value[1], 16)   #   added 16
+        length_of_koef = int(ac.value[1], 16)
         if length_of_koef == 0:
             answer = zig_zag.put_in_zig_zag(0)
             if answer == -1:
@@ -304,9 +300,6 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
 
 def quantization(image_info: ImageInfo):
-    # if len(image_info.quantization_tables) != 2:
-    #     return
-
     for comp in image_info.components:
         quantization_table_id = comp.quantization_table_id
         quantization_table = image_info.get_quantization_table_by_id(quantization_table_id)

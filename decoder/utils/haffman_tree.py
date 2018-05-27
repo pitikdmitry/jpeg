@@ -1,4 +1,4 @@
-from decoder.exceptions.exceptions import HaffmanException, BadDecodeException
+from decoder.exceptions.exceptions import BadDecodeException
 
 
 class Node:
