@@ -493,7 +493,7 @@ def decode_image(file_name: str) -> ():
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/1024x1024.jpg", "rb") as f:
+    with open(cur_path + "/images/.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата

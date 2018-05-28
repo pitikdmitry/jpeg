@@ -87,7 +87,7 @@ class Example(QMainWindow):
         table_id = table.id
         file_name = self._current_dir + "/quantization_tables/table_" + str(table_id) + ".txt"
         f = open(file_name, 'w')
-        np.savetxt(file_name, table.table, fmt='%1.3f', delimiter='\t')
+        np.savetxt(file_name, table.table, fmt='%1.0f', delimiter='\t')
         f.close()
 
     def print_tree_in_file(self, image_info):
