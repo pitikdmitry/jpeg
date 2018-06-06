@@ -71,7 +71,8 @@ def parse_ffdb(bytes_array: BytesArray, image_info: ImageInfo):     #   табл
 def parse_ffc0(bytes_array: BytesArray, image_info: ImageInfo): #   Информация о картинке(р - ры)
     ff_c0_index = bytes_array.find_pair("ff", "c0")
     if ff_c0_index == -1:
-        raise NotBaseMethodOfCodingException
+        ff_c0_index = bytes_array.find_pair("ff", "c2")
+        # raise NotBaseMethodOfCodingException
 
     header_index = ff_c0_index + SECTION_TITLE_SIZE
     ff_db_size = int(bytes_array[header_index] + bytes_array[header_index + 1], 16)
@@ -152,6 +153,7 @@ def hex_to_binary(coded_data_16: str) -> []:
     for ch in coded_data_16:
 
         if ch == '00' and previous_ch == "ff":
+            previous_ch = ch
             continue
 
         coded_data_binary += int_to_binstr(int(ch, 16), 8)
@@ -200,14 +202,17 @@ def parse_channels(image_info: ImageInfo, coded_data_binary: str):
 
     arr_for_index = [0]
     y_amount, cb_amount, cr_amount = 0, 0, 0
+    counter = 0
     try:
         while y_amount < y_component.blocks_amount and\
                 cb_amount < cb_component.blocks_amount and cr_amount < cr_component.blocks_amount:
             for i in range(0, y_component.k_ratio):
                 if y_amount >= y_component.blocks_amount:
                     break
+
                 parse_channel(coded_data_binary, y_component, image_info, arr_for_index)
                 y_amount += 1
+                counter += 1
 
             for j in range(0, cb_component.k_ratio):
                 if cb_amount >= cb_component.blocks_amount:
@@ -241,9 +246,9 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
 
         if tree.ac_dc_class == 1 and tree.haff_table_id == component.ac_haff_table_id: # если таблица для ac и если совпадает id
             ac_haff_tree = tree
-
+    d = -100500
     #   reading dc
-    dc = dc_haff_tree.get_next_value(code, arr_for_index)
+    dc, d = dc_haff_tree.get_next_value(code, arr_for_index)
     dc_koef = 0
     if dc.value == "root" or dc.value == "node":
         raise BadDecodeException
@@ -260,7 +265,7 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
     zig_zag.put_in_zig_zag(dc_koef)
 
     #   reading ac
-    ac = ac_haff_tree.get_next_value(code, arr_for_index)
+    ac, d = ac_haff_tree.get_next_value(code, arr_for_index)
     while True:
         # if 76290 <= arr_for_index[0] <= 76310:
         #     print(1)
@@ -282,7 +287,10 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
             answer = zig_zag.put_in_zig_zag(0)
             if answer == -1:
                 raise FullZigZagException
-            ac = ac_haff_tree.get_next_value(code, arr_for_index)
+            if zig_zag.check_size() <= 0:
+                component.array_of_blocks.append(zig_zag.data)
+                return
+            ac, d = ac_haff_tree.get_next_value(code, arr_for_index)
             continue
         ac_koef = ac_haff_tree.get_next_n_bits(code, arr_for_index, length_of_koef)
         if ac_koef[0] != "1":
@@ -296,7 +304,7 @@ def parse_channel(code: str, component: Component, image_info: ImageInfo, arr_fo
         if zig_zag.check_size() <= 0:
             component.array_of_blocks.append(zig_zag.data)
             return
-        ac = ac_haff_tree.get_next_value(code, arr_for_index)
+        ac, d = ac_haff_tree.get_next_value(code, arr_for_index)
 
 
 def quantization(image_info: ImageInfo):
@@ -493,7 +501,7 @@ def decode_image(file_name: str) -> ():
 
 if __name__ == "__main__":
     cur_path = os.path.dirname(__file__)
-    with open(cur_path + "/images/.jpg", "rb") as f:
+    with open(cur_path + "/images/vodopad.jpg", "rb") as f:
         img = f.read()
         bytes_array = BytesArray(img)
         image_info = ImageInfo()    #   для результата

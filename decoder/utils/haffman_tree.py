@@ -144,6 +144,7 @@ class HaffmanTree:
         return current_node
 
     def get_next_value(self, code: str, arr_for_index: []):
+        f_index = arr_for_index[0]
         index = arr_for_index[0]
         current_node = self.root
         while index < len(code):
@@ -153,13 +154,13 @@ class HaffmanTree:
             elif c == "0" and current_node.left is None:
                 # index -= 1
                 arr_for_index[0] = index
-                return current_node
+                return current_node, code[f_index: arr_for_index[0]]
             elif c == "1" and current_node.right is not None:
                 current_node = current_node.right
             elif c == "1" and current_node.right is None:
                 # index -= 1
                 arr_for_index[0] = index
-                return current_node
+                return current_node, code[f_index: arr_for_index[0]]
             else:
                 raise BadDecodeException
             index += 1
